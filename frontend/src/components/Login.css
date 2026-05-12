@@ -1,0 +1,38 @@
+.login-card{
+  background: #fff;
+  border: 3px solid #000000;
+  border-radius: 28px;
+  padding: 40px 48px;
+  max-width: 420px;
+}
+.login-card .title{
+  text-align: center;
+  font-size: 40px;
+  margin-bottom: 28px;
+  font-weight: 700;
+}
+.form{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.input{
+  padding:18px 22px;
+  background: #ffd6b8;
+  border-radius: 18px;
+  border: none;
+  font-size:16px;
+}
+.forgot{
+  text-align:right;
+  font-size:13px;
+  color:#333;
+}
+.login-btn{
+  margin-top:12px;
+  background:#ff9a5a;
+  padding:16px 28px;
+  border-radius:16px;
+  border:none;
+  font-weight:700;
+}

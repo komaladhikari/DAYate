@@ -1,0 +1,67 @@
+.page{
+  min-height:100vh;
+  background: #fff;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+.container{
+  display:grid;
+  grid-template-columns: 1fr 400px 420px;
+  align-items:center;
+  gap:40px;
+  padding:48px 72px;
+}
+.left{
+  display:flex;
+  justify-content:flex-start;
+}
+.center{
+  text-align:center;
+}
+.center .cta h3{
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:18px;
+}
+.signup{
+  background:#ff9a5a;
+  padding:18px 36px;
+  border-radius:18px;
+  border:none;
+  font-weight:700;
+}
+.divider{
+  height:6px;
+  width:180px;
+  background:#000;
+  margin:18px auto;
+}
+.socials{
+  display:flex;
+  gap:18px;
+  justify-content:center;
+}
+.social{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:#eee;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:20px;
+}
+.right{
+  display:flex;
+  justify-content:center;
+}
+.phone{
+  max-width:260px;
+  height:auto;
+}
+
+@media (max-width: 900px){
+  .container{grid-template-columns:1fr; padding:24px}
+  .right{order:2}
+  .center{order:3}
+}
