@@ -7,7 +7,7 @@
   display:grid;
   grid-template-columns: 1fr 400px 420px;
   align-items:center;
-  gap:40px;
+  gap:100px;/* to center the image more to the righht side*/
   padding:48px 72px;
 }
 .left{
@@ -53,11 +53,11 @@
 }
 .right{
   display:flex;
-  justify-content:center;
+  justify-content:flex-end; 
 }
 .phone{
-  max-width:260px;
-  height:auto;
+  max-width:2500px;
+  height:500px;
 }
 
 @media (max-width: 900px){
