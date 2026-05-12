@@ -1,10 +1,12 @@
 import React from 'react'
+import Header from './components/Header'
 import Login from './components/Login'
 import './App.css'
 
 const App = () => {
   return (
     <div className="page">
+      <Header />
       <div className="container">
         <div className="left">
           <Login />
