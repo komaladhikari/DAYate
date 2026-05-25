@@ -14,7 +14,11 @@ connectCloudinary()
 
 //middlewares
 app.use(express.json()); //whatever request we will get will be passed using the json
-app.use(cors()); //can access backend from any ip address
+// CORS: restrict to your frontend origin and allow credentials
+app.use(cors({
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+}));
  
 //api endpoints
 //imports user router from userRoute.js and uses it for all routes starting with /api/user
