@@ -24,7 +24,7 @@ const App = () => {
           </div>
         </div>
         <div className="right">
-          <img src="/src/assets/login.png" alt="phone" className="phone" />
+          <img src="/src/assets/image1.png" alt="phone" className="phone" />
         </div>
       </div>
     </div>
