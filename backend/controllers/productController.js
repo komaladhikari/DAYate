@@ -47,9 +47,15 @@ import productModel from '../models/productModel.js';
 
 // function for listing cafes and restaurants
 const listDates = {
-    products: (req, res) => {
-        res.json({ success: true, data: [] });
-    },
+    products: async (req, res) => {
+        try {
+            const products = await productModel.find({});
+            res.json({ success: true, data: products });
+        } catch (error) {
+            console.log(error);
+            res.json({ success: false, message: error.message });
+        }
+    }
 };
 
 // function for removing restaurants and cafes
