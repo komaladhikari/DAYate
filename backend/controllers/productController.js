@@ -1,69 +1,49 @@
 // fucntion for adding restraunts and cafes
- const addDates = {products: (req, res) => {
-    try{
-        // helpful logs
-        console.log('content-type:', req.headers['content-type']);
-        console.log('body:', req.body);
-        console.log('files:', req.files);
+import {v2 as cloudinary} from 'cloudinary';
+import productModel from '../models/productModel.js';
 
-        const {name, location, description} = req.body;
+ const addDates = {products: async (req, res) => {
+        try{
+                const {name, location, description} = req.body;
 
-        // use optional chaining to avoid throwing when req.files is undefined
-        const image1 = req.files?.image1?.[0] ?? null;
-        const image2 = req.files?.image2?.[0] ?? null;
+                // safe access to uploaded files
+                const image1 = req.files?.image1?.[0] ?? null;
+                const image2 = req.files?.image2?.[0] ?? null;
 
-        if (!image1 || !image2) {
-            // respond showing received data so you can test without uploading files
-            return res.status(200).json({ success: true, message: 'No files uploaded', data: { name, location, description }, files: req.files || null });
+                const images = [image1, image2].filter(Boolean);
+
+                let imagesUrl = [];
+                if (images.length > 0) {
+                    imagesUrl = await Promise.all(
+                        images.map(async(item) => {
+                            const result = await cloudinary.uploader.upload(item.path, {resource_type: 'image'});
+                            return result.secure_url;
+                        })
+                    );
+                }
+
+                console.log(name, location, description)
+                console.log (imagesUrl)
+
+                const productData = {
+                    name, location, description,
+                    images: imagesUrl,
+                    date: Date.now()
+                }
+                console.log(productData)
+
+                const product = new productModel(productData);
+                await product.save();
+
+                res.json({sucess: true, message: "Date plan added successfully"})
         }
+        catch(error) {
+                console.log(error);
+                res.json({success: false, message: error.message})
 
-        console.log(name, location, description)
-        console.log (image1, image2)
-
-        res.json({ success: true })
-    }
-    catch(error) {
-        console.log(error);
-        res.json({success: false, message: error.message})
-
-    }
+        }
 }}; 
 
-// functions for product endpoints
-/*const addDates = {
-    products: (req, res) => {
-        try {
-            // helpful logs for debugging requests (content-type, body, files)
-            console.log('content-type:', req.headers['content-type']);
-            console.log('body:', req.body);
-            console.log('files:', req.files);
-
-            const { name, location, description } = req.body;
-
-            // safe access so the handler doesn't crash when files are not provided
-            const image1 = req.files?.image1?.[0] ?? null;
-            const image2 = req.files?.image2?.[0] ?? null;
-
-            // If files are not provided, return a JSON response showing received data
-            if (!image1 || !image2) {
-                return res.status(200).json({
-                    success: true,
-                    message: 'Received request (no files uploaded) — endpoint reachable',
-                    data: { name, location, description },
-                    files: req.files || null,
-                });
-            }
-
-            console.log(name, location, description);
-            console.log(image1, image2);
-
-            res.json({ success: true, message: 'Files received' });
-        } catch (error) {
-            console.log(error);
-            res.json({ success: false, message: error.message });
-        }
-    },
-}; */
 
 // function for listing cafes and restaurants
 const listDates = {

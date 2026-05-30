@@ -1,8 +1,9 @@
+import mongoose from 'mongoose';
 const datePlanSchema = new mongoose.Schema(
   {
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    partner:   { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    title:     { type: String, required: true },
+    //createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    //partner:   { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    name:     { type: String, required: true },
     date:      { type: Date, required: true },
     budget:    { type: Number, default: 0 },
     status: {
@@ -23,5 +24,6 @@ const datePlanSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const DatePlan =
-  mongoose.models.DatePlan || mongoose.model("DatePlan", datePlanSchema);
+const DatePlan = mongoose.models.DatePlan || mongoose.model("DatePlan", datePlanSchema);
+
+export default DatePlan;
