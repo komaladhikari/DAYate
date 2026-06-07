@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 const datePlanSchema = new mongoose.Schema(
   {
-    //createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     //partner:   { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     name:     { type: String, required: true },
     date:      { type: Date, required: true },
@@ -17,6 +17,8 @@ const datePlanSchema = new mongoose.Schema(
         title: String,
         time: Date,
         location: String,
+        from: String,
+        to: String,
         bookingStatus: { type: String, enum: ["pending", "confirmed", "failed"] }
       }
     ]

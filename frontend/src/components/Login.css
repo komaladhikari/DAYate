@@ -1,38 +1,100 @@
-.login-card{
-  background: #fff;
+/* Login page specific styles to match the provided design */
+
+/* Large rounded panel (phone-like) */
+section > form {
+  background: #ffffff;
   border: 3px solid #000000;
   border-radius: 28px;
-  padding: 40px 48px;
-  max-width: 420px;
+  padding: 48px 40px;
+  max-width: 480px;
+  margin: 0 auto;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.04);
 }
-.login-card .title{
+
+/* Title inside the panel */
+section > form h2 {
   text-align: center;
   font-size: 40px;
-  margin-bottom: 28px;
-  font-weight: 700;
+  margin-bottom: 24px;
+  font-weight: 800;
+  color: #111827;
 }
-.form{
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-}
-.input{
-  padding:18px 22px;
-  background: #ffd6b8;
+
+/* Inputs styled as rounded orange pills */
+section > form input[type="email"],
+section > form input[type="password"] {
+  width: 100%;
+  display: block;
+  padding: 22px 24px;
+  margin: 14px 0;
+  background: linear-gradient(180deg, #ffd6b8 0%, #ffc9a3 100%);
   border-radius: 18px;
   border: none;
-  font-size:16px;
+  font-size: 16px;
+  color: #111827;
+  outline: none;
 }
-.forgot{
-  text-align:right;
-  font-size:13px;
-  color:#333;
+
+/* Smaller text for helper links */
+section > form .forgot {
+  text-align: right;
+  font-size: 13px;
+  color: #374151;
+  margin-top: 6px;
 }
-.login-btn{
-  margin-top:12px;
-  background:#ff9a5a;
-  padding:16px 28px;
-  border-radius:16px;
-  border:none;
-  font-weight:700;
+
+/* Primary login button */
+section > form button[type="submit"] {
+  margin-top: 22px;
+  width: 50%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  background: linear-gradient(90deg, #ff9a5a 0%, #ff7b3d 100%);
+  padding: 16px 34px;
+  border-radius: 18px;
+  border: none;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255,122,70,0.18);
+}
+
+/* Center column sign-up CTA & social icons */
+.login-cta {
+  text-align: center;
+}
+.login-cta .signup-btn {
+  background: linear-gradient(90deg,#ff9a5a,#ff7b3d);
+  color: #fff;
+  padding: 18px 34px;
+  border-radius: 18px;
+  display: inline-block;
+  font-weight: 800;
+}
+.social-row {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  align-items: center;
+}
+.social-row img, .social-row svg {
+  width: 48px;
+  height: 48px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 900px) {
+  section > form { max-width: 100%; border-radius: 18px; padding: 28px; }
+  section > form button[type="submit"] { width: 100%; }
+}
+
+/* Utility: small divider used in the center column */
+.divider-line {
+  height: 4px;
+  width: 180px;
+  background: #000;
+  margin: 18px auto;
 }

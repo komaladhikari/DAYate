@@ -2,7 +2,7 @@
 //route for user login
 
 
-import userModel from '../models/productModel.js';
+import userModel from '../models/userModel.js';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -74,9 +74,49 @@ const registerUser = async (req,res)=>{
             res.json({sucess:false, message: error.message})
         }
 }
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.userId).select("-password");
 
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, user });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const updateUserProfile = async (req, res) => {
+  try {
+    const { name, email, phone, address } = req.body;
+
+    const updatedUser = await userModel
+      .findByIdAndUpdate(
+        req.userId,
+        { name, email, phone, address },
+        { new: true }
+      )
+      .select("-password");
+
+    res.json({
+      success: true,
+      message: "Profile updated",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
 //route for admin login
 const adminLogin = async (req,res)=>{
 
 }
-export {loginUser, registerUser, adminLogin}
+export {
+  loginUser,
+  registerUser,
+  adminLogin,
+  getUserProfile,
+  updateUserProfile,
+};

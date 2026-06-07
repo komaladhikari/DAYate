@@ -5,6 +5,7 @@ import connectDB from './config/mongodb.js';
 import connectCloudinary from './config/cloudinary.js';
 import userRouter from './routes/userRoute.js';
 import productRouter from './routes/productRoute.js';
+import planRouter from "./routes/planRoute.js";
 
 //app configuration
 const app = express();
@@ -26,6 +27,7 @@ app.use(cors({
 //imports user router from userRoute.js and uses it for all routes starting with /api/user
 app.use('/api/user', userRouter)
 app.use ('/api/product', productRouter)
+app.use("/api/plan", planRouter); // import plan router and use it for all routes starting with /api/plan
 
 
 app.get('/',(req,res)=>{

@@ -35,7 +35,7 @@ import productModel from '../models/productModel.js';
                 const product = new productModel(productData);
                 await product.save();
 
-                res.json({sucess: true, message: "Date plan added successfully"})
+                res.json({success: true, message: "Date plan added successfully"})
         }
         catch(error) {
                 console.log(error);
@@ -60,16 +60,14 @@ const listDates = {
 
 // function for removing restaurants and cafes
 const removeDates = {
-    products:async(req, res) => {
-        try{
+    products: async (req, res) => {
+        try {
             await productModel.findByIdAndDelete(req.body.id);
-            res.json({success:"true", message: "Date plan removed"})
-        }
-        catch(error) {
+            res.json({ success: true, message: "Date plan removed" });
+        } catch (error) {
             console.log(error);
-            res.json({success:"false", message: error.message})
+            res.json({ success: false, message: error.message });
         }
-        
     },
 };
 
