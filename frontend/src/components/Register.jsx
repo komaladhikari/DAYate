@@ -57,7 +57,7 @@ const Register = () => {
   };
 
   return (
-    <section className="min-h-[calc(100vh-90px)] bg-gradient-to-br from-white via-orange-50/40 to-white px-4 py-14">
+    <section className="min-h-[calc(100vh-90px)] bg-[#ffbf8b] px-4 py-14">
       <div className="mx-auto flex max-w-6xl items-center justify-center">
         <form
           onSubmit={handleSubmit}
