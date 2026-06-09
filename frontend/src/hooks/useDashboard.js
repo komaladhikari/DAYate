@@ -16,13 +16,14 @@ const initialDashboard = {
 const getId = (value) => String(value?._id || value || "");
 
 const buildDashboard = ({ user, plans }) => {
-  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const userId = getId(user);
 
   const upcomingPlans = plans
     .filter(
       (plan) =>
-        new Date(plan.date) >= now &&
+        new Date(plan.date) >= today &&
         plan.status !== "cancelled"
     )
     .sort((first, second) => new Date(first.date) - new Date(second.date));
