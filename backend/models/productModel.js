@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 const datePlanSchema = new mongoose.Schema(
   {
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    //partner:   { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    partner: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    sharedWithEmail: { type: String, default: "" },
+    sharedAt: { type: Date, default: null },
     name:     { type: String, required: true },
     date:      { type: Date, required: true },
     budget:    { type: Number, default: 0 },
