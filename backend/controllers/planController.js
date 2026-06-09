@@ -32,7 +32,15 @@ const addPlan = async (req, res) => {
 
 const listPlans = async (req, res) => {
   try {
-    const plans = await DatePlan.find({createdBy: req.userId});
+    const query = { createdBy: req.userId };
+
+    if (req.query.finalized === "true") {
+      query.finalized = true;
+    } else if (req.query.finalized === "false") {
+      query.finalized = false;
+    }
+
+    const plans = await DatePlan.find(query);
     res.json({ success: true, data: plans });
   } catch (error) {
     res.json({ success: false, message: error.message });
@@ -110,6 +118,19 @@ const sharePlan = async (req, res) => {
     });
   }
 };
+const finalizePlans = async (req, res) => {
+  try {
+    const { planIds } = req.body;
 
+    await DatePlan.updateMany(
+      { _id: { $in: planIds }, createdBy: req.userId },
+      { finalized: true }
+    );
 
-export { addPlan, listPlans, sharePlan };
+    res.json({ success: true, message: "Plans finalized" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { addPlan, listPlans, sharePlan, finalizePlans };

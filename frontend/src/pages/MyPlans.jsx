@@ -1,14 +1,88 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 const MyPlans = () => {
   const [plans, setPlans] = useState([]);
+  const [selectedPlans, setSelectedPlans] = useState([]);
+
+  const togglePlan = (id) => {
+    setSelectedPlans((prev) =>
+      prev.includes(id)
+        ? prev.filter((planId) => planId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const removePlan = async (planId) => {
+    if (!window.confirm("Remove this plan?")) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`${API}/api/product/remove`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: planId }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Could not remove plan");
+        return;
+      }
+
+      setPlans((prev) => prev.filter((plan) => plan._id !== planId));
+      setSelectedPlans((prev) => prev.filter((id) => id !== planId));
+    } catch (error) {
+      console.error(error);
+      alert("Could not remove plan");
+    }
+  };
+
+  const finalizePlans = async () => {
+    if (selectedPlans.length === 0) {
+      alert("Please select at least one plan");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`${API}/api/plan/finalize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ planIds: selectedPlans }),
+      });
+
+      const data = await res.json();
+      alert(data.message);
+
+      if (data.success) {
+        setPlans((prev) =>
+          prev.filter((plan) => !selectedPlans.includes(plan._id))
+        );
+        setSelectedPlans([]);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Could not finalize plans");
+    }
+  };
 
   useEffect(() => {
     const getPlans = async () => {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/api/plan/list`, {
+      const res = await fetch(`${API}/api/plan/list?finalized=false`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -30,9 +104,30 @@ const MyPlans = () => {
       {plans.length === 0 ? (
         <p className="text-slate-600">No date plans yet.</p>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          {plans.map((plan) => (
-            <div key={plan._id} className="rounded-3xl bg-white p-6 shadow-lg">
+        <>
+          <button
+            type="button"
+            onClick={finalizePlans}
+            disabled={selectedPlans.length === 0}
+            className="mb-8 rounded-full bg-[#ff9847] px-6 py-3 font-semibold text-white transition hover:bg-[#e87f30] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Finalize Selected Plans
+          </button>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {plans.map((plan) => (
+              <div key={plan._id} className="rounded-3xl bg-white p-6 shadow-lg">
+                <label className="mb-4 flex items-center gap-3 font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={selectedPlans.includes(plan._id)}
+                    onChange={() => togglePlan(plan._id)}
+                    disabled={plan.finalized}
+                    className="h-5 w-5 accent-[#ff9847]"
+                  />
+                  {plan.finalized ? "Finalized" : "Select plan"}
+                </label>
+
               <h2 className="text-2xl font-bold">{plan.name}</h2>
 
               <p className="mt-2 text-sm text-slate-600">
@@ -67,12 +162,22 @@ const MyPlans = () => {
                   </div>
                 ))}
               </div>
-            </div>
-          ))}
-        </div>
+
+              <button
+                type="button"
+                onClick={() => removePlan(plan._id)}
+                className="mt-5 rounded-full border border-red-300 px-5 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                Remove Plan
+              </button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </section>
   );
 };
+
 
 export default MyPlans;

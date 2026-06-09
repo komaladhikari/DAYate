@@ -6,6 +6,7 @@ const datePlanSchema = new mongoose.Schema(
     name:     { type: String, required: true },
     date:      { type: Date, required: true },
     budget:    { type: Number, default: 0 },
+    finalized: { type: Boolean, default: false },
     status: {
       type: String,
       enum: ["draft", "planned", "in_progress", "completed", "cancelled"],

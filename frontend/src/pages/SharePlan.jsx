@@ -1,33 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 const PlannedDates = () => {
-  const API = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
   const [plans, setPlans] = useState([]);
   const [emails, setEmails] = useState({});
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
-
-  const fetchPlans = async () => {
-    try {
-      const res = await fetch(`${API}/api/plan/list`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setPlans(data.data);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleShare = async (planId) => {
     const lovedOneEmail = emails[planId];
@@ -64,6 +44,40 @@ const PlannedDates = () => {
     }
   };
 
+  const removePlan = async (planId) => {
+    if (!window.confirm("Remove this shared plan?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/api/product/remove`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: planId }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Could not remove plan");
+        return;
+      }
+
+      setPlans((prev) => prev.filter((plan) => plan._id !== planId));
+      setEmails((prev) => {
+        const updatedEmails = { ...prev };
+        delete updatedEmails[planId];
+        return updatedEmails;
+      });
+    } catch (error) {
+      console.log(error);
+      alert("Could not remove plan");
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       alert("Please login first");
@@ -71,8 +85,28 @@ const PlannedDates = () => {
       return;
     }
 
+    const fetchPlans = async () => {
+      try {
+        const res = await fetch(`${API}/api/plan/list?finalized=true`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setPlans(data.data);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPlans();
-  }, []);
+  }, [token]);
 
   if (loading) {
     return <p className="p-8">Loading your plans...</p>;
@@ -144,6 +178,14 @@ const PlannedDates = () => {
                     className="rounded-full bg-[#ff9847] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e87f30]"
                   >
                     Share Plan
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => removePlan(plan._id)}
+                    className="rounded-full border border-red-300 px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                  >
+                    Remove Plan
                   </button>
                 </div>
               </div>

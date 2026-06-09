@@ -65,3 +65,6 @@
   .right{order:2}
   .center{order:3}
 }
+.clip-bookmark {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+}

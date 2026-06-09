@@ -62,7 +62,15 @@ const listDates = {
 const removeDates = {
     products: async (req, res) => {
         try {
-            await productModel.findByIdAndDelete(req.body.id);
+            const removedPlan = await productModel.findOneAndDelete({
+                _id: req.body.id,
+                createdBy: req.userId,
+            });
+
+            if (!removedPlan) {
+                return res.json({ success: false, message: "Date plan not found" });
+            }
+
             res.json({ success: true, message: "Date plan removed" });
         } catch (error) {
             console.log(error);

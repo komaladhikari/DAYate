@@ -30,7 +30,7 @@ const BookRides = () => {
 
     try {
       const response = await axios.post(
-        `${backendUrl}/api/plans/add`,
+        `${backendUrl}/api/plan/add`,
         {
           name: "Ride Booking",
           date: new Date().toISOString(),
@@ -43,7 +43,7 @@ const BookRides = () => {
         },
         {
           headers: {
-            token,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
