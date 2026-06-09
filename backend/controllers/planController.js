@@ -110,6 +110,19 @@ const sharePlan = async (req, res) => {
     });
   }
 };
+const finalizePlans = async (req, res) => {
+  try {
+    const { planIds } = req.body;
 
+    await DatePlan.updateMany(
+      { _id: { $in: planIds }, createdBy: req.userId },
+      { finalized: true }
+    );
 
-export { addPlan, listPlans, sharePlan };
+    res.json({ success: true, message: "Plans finalized" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { addPlan, listPlans, sharePlan, finalizePlans };

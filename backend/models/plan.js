@@ -9,4 +9,11 @@ const planSchema = new mongoose.Schema({
   title: String,
   location: String,
   time: String,
+  finalized: { type: Boolean, default: false },
+  sharedWith: { type: String, default: "" },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "user",
+    required: true,
+  },
 });
