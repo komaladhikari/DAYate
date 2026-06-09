@@ -3,7 +3,7 @@ import sendEmail from "../models/sendEmail.js";
 
 const addPlan = async (req, res) => {
   try {
-    const { name, date, time, location, title, type, from, to } = req.body;
+    const { name, date, time, location, title, from, to, } = req.body;
 
     const plan = new DatePlan({
       name,
@@ -11,7 +11,7 @@ const addPlan = async (req, res) => {
       createdBy: req.userId,
       activities: [
         {
-          type,
+          type: "restaurant",
           title,
           time,
           location,
@@ -32,7 +32,15 @@ const addPlan = async (req, res) => {
 
 const listPlans = async (req, res) => {
   try {
-    const plans = await DatePlan.find({createdBy: req.userId});
+    const query = { createdBy: req.userId };
+
+    if (req.query.finalized === "true") {
+      query.finalized = true;
+    } else if (req.query.finalized === "false") {
+      query.finalized = false;
+    }
+
+    const plans = await DatePlan.find(query);
     res.json({ success: true, data: plans });
   } catch (error) {
     res.json({ success: false, message: error.message });

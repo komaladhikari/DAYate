@@ -14,6 +14,38 @@ const MyPlans = () => {
     );
   };
 
+  const removePlan = async (planId) => {
+    if (!window.confirm("Remove this plan?")) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`${API}/api/product/remove`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: planId }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || "Could not remove plan");
+        return;
+      }
+
+      setPlans((prev) => prev.filter((plan) => plan._id !== planId));
+      setSelectedPlans((prev) => prev.filter((id) => id !== planId));
+    } catch (error) {
+      console.error(error);
+      alert("Could not remove plan");
+    }
+  };
+
   const finalizePlans = async () => {
     if (selectedPlans.length === 0) {
       alert("Please select at least one plan");
@@ -37,11 +69,7 @@ const MyPlans = () => {
 
       if (data.success) {
         setPlans((prev) =>
-          prev.map((plan) =>
-            selectedPlans.includes(plan._id)
-              ? { ...plan, finalized: true }
-              : plan
-          )
+          prev.filter((plan) => !selectedPlans.includes(plan._id))
         );
         setSelectedPlans([]);
       }
@@ -54,7 +82,7 @@ const MyPlans = () => {
   useEffect(() => {
     const getPlans = async () => {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API}/api/plan/list`, {
+      const res = await fetch(`${API}/api/plan/list?finalized=false`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -134,6 +162,14 @@ const MyPlans = () => {
                   </div>
                 ))}
               </div>
+
+              <button
+                type="button"
+                onClick={() => removePlan(plan._id)}
+                className="mt-5 rounded-full border border-red-300 px-5 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                Remove Plan
+              </button>
               </div>
             ))}
           </div>
