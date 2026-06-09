@@ -35,9 +35,13 @@ const Navbar = () => {
 export default Navbar
 */
 import logo from "../assets/image2.png";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
+  useLocation();
+  const navigate = useNavigate();
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
+
   const linkClass = ({ isActive }) =>
     `text-sm font-medium transition ${
       isActive
@@ -45,12 +49,17 @@ const Navbar = () => {
         : "text-slate-950/80 hover:text-slate-950"
     }`;
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/", { replace: true });
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-[#ff9847]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         
         {/* Logo */}
-        <NavLink to="/" className="flex items-center gap-3">
+        <NavLink to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-3">
           <img
             src={logo}
             className="block h-16 w-auto object-contain"
@@ -72,20 +81,38 @@ const Navbar = () => {
             Contact
           </NavLink>
 
-          <NavLink to="/profile" className={linkClass}>
-            Profile
-          </NavLink>
+          {isLoggedIn ? (
+            <>
+              <NavLink to="/dashboard" className={linkClass}>
+                Dashboard
+              </NavLink>
 
-          <NavLink to="/login" className={linkClass}>
-            Sign in
-          </NavLink>
+              <NavLink to="/profile" className={linkClass}>
+                Profile
+              </NavLink>
 
-          <NavLink
-            to="/register"
-            className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:bg-slate-800"
-          >
-            Get started
-          </NavLink>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:bg-slate-800"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" className={linkClass}>
+                Sign in
+              </NavLink>
+
+              <NavLink
+                to="/register"
+                className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:bg-slate-800"
+              >
+                Get started
+              </NavLink>
+            </>
+          )}
         </div>
       </div>
     </header>
