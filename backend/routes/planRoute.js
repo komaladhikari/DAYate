@@ -1,5 +1,4 @@
 import express from "express";
-import { addPlan, listPlans } from "../controllers/planController.js";
 import { addPlan, listPlans, sharePlan } from "../controllers/planController.js";
 import authUser from "../middleware/authUser.js";
 

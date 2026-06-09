@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { User, Mail, Lock } from "lucide-react";
 
 const Register = () => {
@@ -11,6 +11,7 @@ const Register = () => {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,7 +50,7 @@ const Register = () => {
         localStorage.setItem("token", data.token);
       }
 
-      navigate("/dashboard");
+      navigate(location.state?.from || "/dashboard", { replace: true });
     } catch (error) {
       console.error(error);
       alert("Could not connect to backend");

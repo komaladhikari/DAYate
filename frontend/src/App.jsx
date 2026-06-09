@@ -2,6 +2,7 @@ import {Routes, Route} from 'react-router-dom'
 import Home from './pages/Home'
 import Activites from './pages/Activites'
 import Navbar from './components/Navbar'
+import ProtectedRoute from './components/ProtectedRoute'
 import Login from './components/Login'
 import Register from './components/Register'
 import About from './pages/About'
@@ -27,21 +28,22 @@ const App = () => {
       <main className="w-full">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/activities" element={<Activites />} />
-          <Route path="/cafes" element={<Cafes />} />
-          <Route path="/gifts" element={<Gifts />} />
-          <Route path="/book-rides" element={<BookRides />} />
-          <Route path="/share" element={<SharePlan />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/activities" element={<ProtectedRoute><Activites /></ProtectedRoute>} />
+          <Route path="/cafes" element={<ProtectedRoute><Cafes /></ProtectedRoute>} />
+          <Route path="/gifts" element={<ProtectedRoute><Gifts /></ProtectedRoute>} />
+          <Route path="/book-rides" element={<ProtectedRoute><BookRides /></ProtectedRoute>} />
+          <Route path="/share" element={<ProtectedRoute><SharePlan /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
           {/* <Route path = '/placeOrder' element = {<placeOrder/>}/> */}
           <Route path="/contact" element={<Contact />} />
-          <Route path="/my-plans" element={<MyPlans />} />
-          <Route path="/cafes/:id" element={<CafeReservation />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
+          <Route path="/cafes/:id" element={<ProtectedRoute><CafeReservation /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/planned-dates" element={<ProtectedRoute><SharePlan /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

@@ -1,9 +1,9 @@
 import DatePlan from "../models/productModel.js";
-import sendEmail from "../utils/sendEmail.js";
+import sendEmail from "../models/sendEmail.js";
 
 const addPlan = async (req, res) => {
   try {
-    const { name, date, time, location, title, from, to } = req.body;
+    const { name, date, time, location, title, from, to, } = req.body;
 
     const plan = new DatePlan({
       name,
