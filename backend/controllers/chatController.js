@@ -55,6 +55,13 @@ const sendMessage = async (req, res) => {
     let imageUrl = "";
 
     if (req.file) {
+      if (!cloudinary.config().cloud_name) {
+        return res.status(500).json({
+          success: false,
+          message: "Image uploads are not configured",
+        });
+      }
+
       const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
       const upload = await cloudinary.uploader.upload(dataUri, {
         folder: "dayate/chat",

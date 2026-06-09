@@ -129,6 +129,30 @@ const Chat = () => {
     }
   };
 
+  const selectImage = (event) => {
+    const file = event.target.files?.[0] || null;
+
+    if (!file) {
+      setImage(null);
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      setError("Image must be smaller than 8 MB");
+      event.target.value = "";
+      return;
+    }
+
+    setError("");
+    setImage(file);
+  };
+
   const partnerName = (plan) => {
     if (!plan || !currentUser) return "Loved one";
     return plan.createdBy?._id === currentUser._id
@@ -256,7 +280,7 @@ const Chat = () => {
                       ref={imageInputRef}
                       type="file"
                       accept="image/*"
-                      onChange={(event) => setImage(event.target.files?.[0] || null)}
+                      onChange={selectImage}
                       className="hidden"
                     />
                     <button
