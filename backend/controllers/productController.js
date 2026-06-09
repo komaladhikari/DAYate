@@ -1,6 +1,7 @@
 // fucntion for adding restraunts and cafes
 import {v2 as cloudinary} from 'cloudinary';
 import productModel from '../models/productModel.js';
+import Message from "../models/messageModel.js";
 
  const addDates = {products: async (req, res) => {
         try{
@@ -62,15 +63,28 @@ const listDates = {
 const removeDates = {
     products: async (req, res) => {
         try {
-            const removedPlan = await productModel.findOneAndDelete({
+            const plan = await productModel.findOne({
                 _id: req.body.id,
                 createdBy: req.userId,
             });
 
-            if (!removedPlan) {
+            if (!plan) {
                 return res.json({ success: false, message: "Date plan not found" });
             }
 
+            if (plan.partner) {
+                plan.status = "cancelled";
+                await plan.save();
+                await Message.create({
+                    plan: plan._id,
+                    type: "system",
+                    text: "This date was cancelled.",
+                });
+
+                return res.json({ success: true, message: "Date plan cancelled" });
+            }
+
+            await plan.deleteOne();
             res.json({ success: true, message: "Date plan removed" });
         } catch (error) {
             console.log(error);

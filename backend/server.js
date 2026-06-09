@@ -6,6 +6,7 @@ import connectCloudinary from './config/cloudinary.js';
 import userRouter from './routes/userRoute.js';
 import productRouter from './routes/productRoute.js';
 import planRouter from "./routes/planRoute.js";
+import chatRouter from "./routes/chatRoute.js";
 
 //app configuration
 const app = express();
@@ -28,6 +29,7 @@ app.use(cors({
 app.use('/api/user', userRouter)
 app.use ('/api/product', productRouter)
 app.use("/api/plan", planRouter); // import plan router and use it for all routes starting with /api/plan
+app.use("/api/chat", chatRouter);
 
 
 app.get('/',(req,res)=>{
