@@ -28,22 +28,26 @@ const BookRides = () => {
       return;
     }
 
+    const [hours, minutes] = form.time.split(":").map(Number);
+    const rideDateTime = new Date();
+    rideDateTime.setHours(hours, minutes, 0, 0);
+
     try {
       const response = await axios.post(
-        `${backendUrl}/api/plans/add`,
+        `${backendUrl}/api/plan/add`,
         {
           name: "Ride Booking",
-          date: new Date().toISOString(),
+          date: rideDateTime.toISOString(),
           title: "Ride",
           type: "ride",
           from: form.from,
           to: form.to,
-          time: form.time,
+          time: rideDateTime.toISOString(),
           location: form.to,
         },
         {
           headers: {
-            token,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
