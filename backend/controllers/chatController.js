@@ -43,6 +43,39 @@ const listMessages = async (req, res) => {
   }
 };
 
+const listCalendar = async (req, res) => {
+  try {
+    const plans = await DatePlan.find({
+      $or: [{ createdBy: req.userId }, { partner: req.userId }],
+    }).sort({ date: -1 });
+
+    const images = await Message.find({
+      plan: { $in: plans.map((plan) => plan._id) },
+      imageUrl: { $ne: "" },
+    })
+      .populate("sender", "name")
+      .sort({ createdAt: -1 });
+
+    const imagesByPlan = images.reduce((grouped, image) => {
+      const planId = image.plan.toString();
+      grouped[planId] = grouped[planId] || [];
+      grouped[planId].push(image);
+      return grouped;
+    }, {});
+
+    const calendar = plans
+      .map((plan) => ({
+        ...plan.toObject(),
+        images: imagesByPlan[plan._id.toString()] || [],
+      }))
+      .filter((plan) => plan.images.length > 0);
+
+    res.json({ success: true, data: calendar });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 const sendMessage = async (req, res) => {
   try {
     const plan = await findAccessiblePlan(req.params.planId, req.userId);
@@ -89,4 +122,4 @@ const sendMessage = async (req, res) => {
   }
 };
 
-export { listChats, listMessages, sendMessage };
+export { listCalendar, listChats, listMessages, sendMessage };

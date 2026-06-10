@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Coffee,
   Gift,
-  Lightbulb,
   MessageCircle,
   Share2,
 } from "lucide-react";
@@ -14,7 +13,7 @@ const actions = [
   { label: "Share Plan", path: "/share", icon: Share2 },
   { label: "Open Chat", path: "/chat", icon: MessageCircle },
   { label: "View My Plans", path: "/my-plans", icon: CalendarDays },
-  { label: "Browse Ideas", path: "/activities", icon: Lightbulb },
+  { label: "Date Calendar", path: "/date-calendar", icon: CalendarDays },
 ];
 
 const planningActions = [
