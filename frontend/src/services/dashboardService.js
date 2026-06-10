@@ -1,7 +1,13 @@
 const API = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 const parseResponse = async (response, fallbackMessage) => {
-  const data = await response.json();
+  let data;
+
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(fallbackMessage);
+  }
 
   if (!response.ok || !data.success) {
     throw new Error(data.message || fallbackMessage);

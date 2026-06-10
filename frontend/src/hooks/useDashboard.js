@@ -45,6 +45,7 @@ const useDashboard = () => {
   const [dashboard, setDashboard] = useState(initialDashboard);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hasData, setHasData] = useState(false);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -53,6 +54,7 @@ const useDashboard = () => {
     try {
       const data = await getDashboardData();
       setDashboard(buildDashboard(data));
+      setHasData(true);
     } catch (requestError) {
       setError(requestError.message || "Could not load your dashboard.");
     } finally {
@@ -66,6 +68,7 @@ const useDashboard = () => {
     getDashboardData({ signal: controller.signal })
       .then((data) => {
         setDashboard(buildDashboard(data));
+        setHasData(true);
         setError("");
       })
       .catch((requestError) => {
@@ -86,6 +89,7 @@ const useDashboard = () => {
     ...dashboard,
     loading,
     error,
+    hasData,
     refetch,
   };
 };

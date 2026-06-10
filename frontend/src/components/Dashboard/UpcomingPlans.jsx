@@ -13,9 +13,12 @@ const UpcomingPlansSkeleton = () => (
   </div>
 );
 
-const UpcomingPlans = ({ plans, user, loading }) => {
+const UpcomingPlans = ({ plans, user, loading, unavailable, onRetry }) => {
   return (
-    <section className="min-h-96 rounded-3xl border border-orange-100 bg-orange-50/50 p-6 shadow-lg shadow-orange-100/50">
+    <section
+      className="min-h-96 rounded-3xl border border-orange-100 bg-orange-50/50 p-6 shadow-lg shadow-orange-100/50"
+      aria-busy={loading}
+    >
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-slate-950">Upcoming Plans</h2>
         <Link
@@ -28,6 +31,22 @@ const UpcomingPlans = ({ plans, user, loading }) => {
 
       {loading ? (
         <UpcomingPlansSkeleton />
+      ) : unavailable ? (
+        <div className="mt-6 flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/60 p-8 text-center">
+          <div>
+            <p className="font-bold text-red-800">Plans could not be loaded</p>
+            <p className="mt-2 text-sm leading-6 text-red-600">
+              Check your connection and try again.
+            </p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-5 rounded-full bg-slate-950 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       ) : plans.length > 0 ? (
         <div className="mt-6 space-y-4">
           {plans.slice(0, 3).map((plan) => (
