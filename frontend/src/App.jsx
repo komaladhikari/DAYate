@@ -12,6 +12,7 @@ import BookRides from './pages/BookRides'
 import SharePlan from './pages/SharePlan'
 import Chat from './pages/Chat'
 import Dashboard from './pages/Dashboard'
+import DateCalendar from './pages/DateCalendar'
 //import placeOrder from './pages/placeOrder'
 import Contact from './pages/Contact'
 import MyPlans from "./pages/MyPlans";
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/book-rides" element={<ProtectedRoute><BookRides /></ProtectedRoute>} />
           <Route path="/share" element={<ProtectedRoute><SharePlan /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/date-calendar" element={<ProtectedRoute><DateCalendar /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
