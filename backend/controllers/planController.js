@@ -93,7 +93,10 @@ const addPlan = async (req, res) => {
 
 const listPlans = async (req, res) => {
   try {
-    const query = { createdBy: req.userId };
+    const query =
+      req.query.scope === "accessible"
+        ? { $or: [{ createdBy: req.userId }, { partner: req.userId }] }
+        : { createdBy: req.userId };
 
     if (req.query.finalized === "true") {
       query.finalized = true;
@@ -101,7 +104,11 @@ const listPlans = async (req, res) => {
       query.finalized = false;
     }
 
-    const plans = await DatePlan.find(query);
+    const plans = await DatePlan.find(query)
+      .populate("createdBy", "name")
+      .populate("partner", "name")
+      .sort({ date: 1 });
+
     res.json({ success: true, data: plans });
   } catch (error) {
     res.json({ success: false, message: error.message });
