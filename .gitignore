@@ -6,6 +6,9 @@
 # Node artifact files
 node_modules/
 dist/
+.env
+.env.*
+!.env.example
 
 # Compiled Java class files
 *.class
@@ -47,4 +50,3 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
-

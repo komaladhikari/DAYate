@@ -17,9 +17,24 @@ connectCloudinary()
 
 //middlewares
 app.use(express.json()); //whatever request we will get will be passed using the json
-// CORS: restrict to your frontend origin and allow credentials
+
+const allowedOrigins = [
+    'http://localhost:5173',
+    ...((process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
+        .split(',')
+        .map((origin) => origin.trim().replace(/\/$/, ''))
+        .filter(Boolean)),
+];
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error(`CORS blocked origin: ${origin}`));
+    },
     credentials: true,
 }));
  
