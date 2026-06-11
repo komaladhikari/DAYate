@@ -6,7 +6,7 @@ import axios from "axios";
 const BookRides = () => {
   const navigate = useNavigate();
 
-  const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
+  const backendUrl = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com";
 
   const [form, setForm] = useState({
     from: "",

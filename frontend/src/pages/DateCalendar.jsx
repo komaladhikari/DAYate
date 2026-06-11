@@ -7,7 +7,7 @@ import {
   X,
 } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5001";
+const API = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com";
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const dateKey = (value) => {
