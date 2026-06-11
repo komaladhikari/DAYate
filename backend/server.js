@@ -20,6 +20,7 @@ app.use(express.json()); //whatever request we will get will be passed using the
 
 const allowedOrigins = [
     'http://localhost:5173',
+    'https://da-yate-livid.vercel.app',
     ...((process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
         .split(',')
         .map((origin) => origin.trim().replace(/\/$/, ''))
