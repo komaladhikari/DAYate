@@ -297,4 +297,33 @@ const updatePlan = async (req, res) => {
   }
 };
 
-export { addPlan, listPlans, sharePlan, finalizePlans, updatePlan };
+const deletePlan = async (req, res) => {
+  try {
+    const plan = await DatePlan.findOne({
+      _id: req.params.planId,
+      createdBy: req.userId,
+    });
+
+    if (!plan) {
+      return res.status(404).json({ success: false, message: "Plan not found" });
+    }
+
+    await Promise.all([
+      Message.deleteMany({ plan: plan._id }),
+      plan.deleteOne(),
+    ]);
+
+    res.json({ success: true, message: "Plan deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export {
+  addPlan,
+  deletePlan,
+  finalizePlans,
+  listPlans,
+  sharePlan,
+  updatePlan,
+};

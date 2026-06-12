@@ -72,20 +72,12 @@ const removeDates = {
                 return res.json({ success: false, message: "Date plan not found" });
             }
 
-            if (plan.partner) {
-                plan.status = "cancelled";
-                await plan.save();
-                await Message.create({
-                    plan: plan._id,
-                    type: "system",
-                    text: "This date was cancelled.",
-                });
+            await Promise.all([
+                Message.deleteMany({ plan: plan._id }),
+                plan.deleteOne(),
+            ]);
 
-                return res.json({ success: true, message: "Date plan cancelled" });
-            }
-
-            await plan.deleteOne();
-            res.json({ success: true, message: "Date plan removed" });
+            res.json({ success: true, message: "Date plan deleted" });
         } catch (error) {
             console.log(error);
             res.json({ success: false, message: error.message });

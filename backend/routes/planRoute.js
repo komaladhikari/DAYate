@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addPlan,
+  deletePlan,
   finalizePlans,
   listPlans,
   sharePlan,
@@ -16,5 +17,6 @@ planRouter.get("/list", authUser, listPlans);
 planRouter.post("/share", authUser, sharePlan);
 planRouter.post("/finalize", authUser, finalizePlans);
 planRouter.patch("/:planId", authUser, updatePlan);
+planRouter.delete("/:planId", authUser, deletePlan);
 
 export default planRouter;

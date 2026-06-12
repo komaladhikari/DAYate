@@ -22,13 +22,11 @@ const MyPlans = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`${API}/api/product/remove`, {
-        method: "POST",
+      const res = await fetch(`${API}/api/plan/${planId}`, {
+        method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ id: planId }),
       });
 
       const data = await res.json();
