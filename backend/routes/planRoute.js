@@ -7,7 +7,7 @@ import {
   sharePlan,
   updatePlan,
 } from "../controllers/planController.js";
-import authUser from "../middleware/authUser.js";
+import authUser from "../shared/middleware/authUser.js";
 
 
 const planRouter = express.Router();

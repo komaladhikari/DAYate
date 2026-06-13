@@ -1,8 +1,8 @@
 
 import express from 'express';
 import {addDates, listDates, removeDates} from '../controllers/productController.js';
-import upload from '../middleware/multer.js';
-import authUser from '../middleware/authUser.js';
+import upload from '../shared/middleware/multer.js';
+import authUser from '../shared/middleware/authUser.js';
 
 const productRouter = express.Router();
 

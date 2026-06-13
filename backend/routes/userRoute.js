@@ -1,5 +1,5 @@
 import express from 'express';
-import authUser from "../middleware/authUser.js";
+import authUser from "../shared/middleware/authUser.js";
 
 import {
   loginUser,

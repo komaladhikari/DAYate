@@ -1,5 +1,5 @@
 import DatePlan from "../models/productModel.js";
-import sendEmail from "../models/sendEmail.js";
+import sendEmail from "../shared/utils/sendEmail.js";
 import Message from "../models/messageModel.js";
 import User from "../models/userModel.js";
 

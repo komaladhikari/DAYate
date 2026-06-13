@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import authUser from "../middleware/authUser.js";
+import authUser from "../shared/middleware/authUser.js";
 import {
   listCalendar,
   listChats,
