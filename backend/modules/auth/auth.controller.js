@@ -17,7 +17,7 @@ const loginUser = async(req,res)=>{
         //if user has an email id already
         const {email, password} = req.body;
         // if user doesnt have one then create response
-        const user = await userModel.findOne({email});
+        const user = await findUserByEmail(email);
         if (!user){
             return res.json({success: false, message: "user does not exist"})
         }
@@ -43,7 +43,7 @@ const registerUser = async (req,res)=>{
             //if anyone will hit the api endpoint with name email and password then we will get those values in the req.body
             const {name,email,password} = req.body;
             //checking user already exists or not 
-            const exits = await userModel.findOne({email});
+            const exits = await findUserByEmail(email);
             if (exits){
                 return res.json ({success: false, message: "User already exists"})
             }
@@ -58,13 +58,11 @@ const registerUser = async (req,res)=>{
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
-            const newUser = new userModel ({
+            const user = await createUser({
                 name,
                 email,
                 password: hashedPassword
-            })
-
-            const user = await newUser.save();
+            });
 
             const token = createToken(user._id);
 
@@ -77,7 +75,7 @@ const registerUser = async (req,res)=>{
 }
 const getUserProfile = async (req, res) => {
   try {
-    const user = await userModel.findById(req.userId).select("-password");
+    const user = await findUserById(req.userId);
 
     if (!user) {
       return res.json({ success: false, message: "User not found" });
@@ -93,13 +91,12 @@ const updateUserProfile = async (req, res) => {
   try {
     const { name, email, phone, address } = req.body;
 
-    const updatedUser = await userModel
-      .findByIdAndUpdate(
-        req.userId,
-        { name, email, phone, address },
-        { new: true }
-      )
-      .select("-password");
+    const updatedUser = await updateUserById(req.userId, {
+      name,
+      email,
+      phone,
+      address,
+    });
 
     res.json({
       success: true,

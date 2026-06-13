@@ -12,7 +12,6 @@ import chatRouter from "./routes/chatRoute.js";
 const app = express();
 const port = process.env.PORT || 5001;
 
-connectDB()
 connectCloudinary()
 
 //middlewares
@@ -52,4 +51,16 @@ app.get('/',(req,res)=>{
     res.send("API working")
 })
 
-app.listen(port, '0.0.0.0', () => console.log('server started on PORT: ' + port + ' (bound to 0.0.0.0)')) //start express server
+const startServer = async () => {
+    try {
+        await connectDB();
+        app.listen(port, '0.0.0.0', () =>
+            console.log('server started on PORT: ' + port + ' (bound to 0.0.0.0)')
+        );
+    } catch (error) {
+        console.error(`Could not connect to MongoDB: ${error.message}`);
+        process.exit(1);
+    }
+};
+
+startServer();
