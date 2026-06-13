@@ -1,7 +1,7 @@
 // fucntion for adding restraunts and cafes
 import {v2 as cloudinary} from 'cloudinary';
 import productModel from '../modules/plans/plan.model.js';
-import Message from "../models/messageModel.js";
+import { deleteMessagesForPlan } from "../modules/chat/chat.service.js";
 
  const addDates = {products: async (req, res) => {
         try{
@@ -73,7 +73,7 @@ const removeDates = {
             }
 
             await Promise.all([
-                Message.deleteMany({ plan: plan._id }),
+                deleteMessagesForPlan(plan._id),
                 plan.deleteOne(),
             ]);
 

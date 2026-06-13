@@ -4,4 +4,5 @@ export {
   findAccessiblePlan,
   findOwnedPlan,
   listAccessiblePlans,
+  listSharedPlans,
 } from "./plan.service.js";

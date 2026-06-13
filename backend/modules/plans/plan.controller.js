@@ -1,10 +1,13 @@
 import DatePlan from "./plan.model.js";
 import sendEmail from "../../shared/utils/sendEmail.js";
-import Message from "../../models/messageModel.js";
 import User from "../auth/user.model.js";
+import {
+  createSystemMessage,
+  deleteMessagesForPlan,
+} from "../chat/chat.service.js";
 
 const addSystemMessage = (plan, text) =>
-  Message.create({ plan: plan._id, type: "system", text });
+  createSystemMessage(plan._id, text);
 
 const formatDate = (value) =>
   new Date(value).toLocaleDateString("en-US", {
@@ -309,7 +312,7 @@ const deletePlan = async (req, res) => {
     }
 
     await Promise.all([
-      Message.deleteMany({ plan: plan._id }),
+      deleteMessagesForPlan(plan._id),
       plan.deleteOne(),
     ]);
 

@@ -16,3 +16,12 @@ export const listAccessiblePlans = (userId) =>
   DatePlan.find({
     $or: [{ createdBy: userId }, { partner: userId }],
   });
+
+export const listSharedPlans = (userId) =>
+  DatePlan.find({
+    partner: { $ne: null },
+    $or: [{ createdBy: userId }, { partner: userId }],
+  })
+    .populate("createdBy", "name email profilePicture")
+    .populate("partner", "name email profilePicture")
+    .sort({ updatedAt: -1 });

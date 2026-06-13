@@ -1,12 +1,12 @@
 import express from "express";
 import multer from "multer";
-import authUser from "../shared/middleware/authUser.js";
+import authUser from "../../shared/middleware/authUser.js";
 import {
   listCalendar,
   listChats,
   listMessages,
   sendMessage,
-} from "../controllers/chatController.js";
+} from "./chat.controller.js";
 
 const chatRouter = express.Router();
 const imageUpload = multer({
