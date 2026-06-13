@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import DatePlan from "../models/productModel.js";
+import DatePlan from "../modules/plans/plan.model.js";
 import Message from "../models/messageModel.js";
 
 const findAccessiblePlan = (planId, userId) =>

@@ -5,7 +5,7 @@ import connectDB from './shared/config/mongodb.js';
 import connectCloudinary from './shared/config/cloudinary.js';
 import { authRouter } from "./modules/auth/index.js";
 import productRouter from './routes/productRoute.js';
-import planRouter from "./routes/planRoute.js";
+import { planRouter } from "./modules/plans/index.js";
 import chatRouter from "./routes/chatRoute.js";
 
 //app configuration

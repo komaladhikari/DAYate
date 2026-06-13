@@ -1,6 +1,6 @@
 // fucntion for adding restraunts and cafes
 import {v2 as cloudinary} from 'cloudinary';
-import productModel from '../models/productModel.js';
+import productModel from '../modules/plans/plan.model.js';
 import Message from "../models/messageModel.js";
 
  const addDates = {products: async (req, res) => {
