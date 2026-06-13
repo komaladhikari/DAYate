@@ -3,7 +3,7 @@ import cors from 'cors';
 import 'dotenv/config';
 import connectDB from './shared/config/mongodb.js';
 import connectCloudinary from './shared/config/cloudinary.js';
-import userRouter from './routes/userRoute.js';
+import { authRouter } from "./modules/auth/index.js";
 import productRouter from './routes/productRoute.js';
 import planRouter from "./routes/planRoute.js";
 import chatRouter from "./routes/chatRoute.js";
@@ -42,7 +42,7 @@ app.use(cors({
 //api endpoints
 
 //imports user router from userRoute.js and uses it for all routes starting with /api/user
-app.use('/api/user', userRouter)
+app.use("/api/user", authRouter);
 app.use ('/api/product', productRouter)
 app.use("/api/plan", planRouter); // import plan router and use it for all routes starting with /api/plan
 app.use("/api/chat", chatRouter);

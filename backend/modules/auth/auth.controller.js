@@ -1,15 +1,16 @@
 //create acc and login the website
 //route for user login
 
-
-import userModel from '../models/userModel.js';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 
-const createToken = (id) => {
-    return jwt.sign({id}, process.env.JWT_SECRET || process.env.JWT_SECRET_KEY)
-}
+import {
+  findUserByEmail,
+  findUserById,
+  createUser,
+  updateUserById,
+  createToken,
+} from "./auth.service.js";
 
 const loginUser = async(req,res)=>{
      try{

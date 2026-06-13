@@ -1,5 +1,5 @@
 import express from 'express';
-import authUser from "../shared/middleware/authUser.js";
+import authUser from "../../shared/middleware/authUser.js";
 
 import {
   loginUser,
@@ -7,7 +7,7 @@ import {
   adminLogin,
   getUserProfile,
   updateUserProfile,
-} from "../controllers/userController.js";
+} from "./auth.controller.js";
 
 //creates one user router
 const userRouter = express.Router();

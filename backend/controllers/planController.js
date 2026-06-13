@@ -1,7 +1,7 @@
 import DatePlan from "../models/productModel.js";
 import sendEmail from "../shared/utils/sendEmail.js";
 import Message from "../models/messageModel.js";
-import User from "../models/userModel.js";
+import User from "../modules/auth/user.model.js";
 
 const addSystemMessage = (plan, text) =>
   Message.create({ plan: plan._id, type: "system", text });
