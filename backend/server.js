@@ -7,6 +7,7 @@ import { authRouter } from "./modules/auth/index.js";
 import productRouter from './routes/productRoute.js';
 import { planRouter } from "./modules/plans/index.js";
 import { chatRouter } from "./modules/chat/index.js";
+import { calendarRouter } from "./modules/calendar/index.js";
 
 //app configuration
 const app = express();
@@ -44,6 +45,7 @@ app.use(cors({
 app.use("/api/user", authRouter);
 app.use ('/api/product', productRouter)
 app.use("/api/plan", planRouter); // import plan router and use it for all routes starting with /api/plan
+app.use("/api/chat/calendar", calendarRouter);
 app.use("/api/chat", chatRouter);
 
 

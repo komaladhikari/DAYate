@@ -2,7 +2,6 @@ import express from "express";
 import multer from "multer";
 import authUser from "../../shared/middleware/authUser.js";
 import {
-  listCalendar,
   listChats,
   listMessages,
   sendMessage,
@@ -22,7 +21,6 @@ const imageUpload = multer({
 });
 
 chatRouter.get("/", authUser, listChats);
-chatRouter.get("/calendar", authUser, listCalendar);
 chatRouter.get("/:planId/messages", authUser, listMessages);
 chatRouter.post(
   "/:planId/messages",

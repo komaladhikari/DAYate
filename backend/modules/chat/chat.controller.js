@@ -1,12 +1,10 @@
 import { v2 as cloudinary } from "cloudinary";
 import {
   findAccessiblePlan,
-  listAccessiblePlans,
   listSharedPlans,
 } from "../plans/plan.service.js";
 import {
   createMessage,
-  listImagesForPlans,
   listMessagesForPlan,
 } from "./chat.service.js";
 
@@ -34,31 +32,6 @@ const listMessages = async (req, res) => {
     const messages = await listMessagesForPlan(plan._id);
 
     res.json({ success: true, data: messages });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
-  }
-};
-
-const listCalendar = async (req, res) => {
-  try {
-    const plans = await listAccessiblePlans(req.userId).sort({ date: -1 });
-    const images = await listImagesForPlans(plans.map((plan) => plan._id));
-
-    const imagesByPlan = images.reduce((grouped, image) => {
-      const planId = image.plan.toString();
-      grouped[planId] = grouped[planId] || [];
-      grouped[planId].push(image);
-      return grouped;
-    }, {});
-
-    const calendar = plans
-      .map((plan) => ({
-        ...plan.toObject(),
-        images: imagesByPlan[plan._id.toString()] || [],
-      }))
-      .filter((plan) => plan.images.length > 0);
-
-    res.json({ success: true, data: calendar });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -113,4 +86,4 @@ const sendMessage = async (req, res) => {
   }
 };
 
-export { listCalendar, listChats, listMessages, sendMessage };
+export { listChats, listMessages, sendMessage };
