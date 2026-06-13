@@ -4,7 +4,6 @@ import 'dotenv/config';
 import connectDB from './shared/config/mongodb.js';
 import connectCloudinary from './shared/config/cloudinary.js';
 import { authRouter } from "./modules/auth/index.js";
-import productRouter from './routes/productRoute.js';
 import { planRouter } from "./modules/plans/index.js";
 import { chatRouter } from "./modules/chat/index.js";
 import { calendarRouter } from "./modules/calendar/index.js";
@@ -44,7 +43,6 @@ app.use(cors({
 
 //imports user router from userRoute.js and uses it for all routes starting with /api/user
 app.use("/api/user", authRouter);
-app.use ('/api/product', productRouter)
 app.use("/api/plan/share", shareRouter);
 app.use("/api/plan", planRouter); // import plan router and use it for all routes starting with /api/plan
 app.use("/api/chat/calendar", calendarRouter);

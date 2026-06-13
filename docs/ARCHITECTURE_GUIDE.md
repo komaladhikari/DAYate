@@ -19,9 +19,8 @@ Register/login
     -> chat images appear as memories in the calendar
 ```
 
-The most important concept is `DatePlan`. It is the center of the application,
-even though its model currently lives in a misleadingly named file:
-`backend/models/productModel.js`.
+The most important concept is `DatePlan`. It is the center of the application
+and its model lives in `backend/modules/plans/plan.model.js`.
 
 ## 2. System Architecture
 
@@ -71,11 +70,8 @@ sequenceDiagram
 ```text
 DAYate/
 ├── backend/
-│   ├── config/          MongoDB and Cloudinary initialization
-│   ├── controllers/     Request handling and business rules
-│   ├── middleware/      JWT authentication and file upload helpers
-│   ├── models/          Mongoose schemas plus email helper
-│   ├── routes/          URL-to-controller mappings
+│   ├── modules/         Business modules: auth, plans, chat, calendar, share
+│   ├── shared/          Shared configuration, middleware, and utilities
 │   ├── server.js        Backend composition root and process entry point
 │   └── .env.example     Required backend configuration
 ├── frontend/
@@ -106,14 +102,12 @@ DAYate/
 
 1. `backend/server.js` loads environment variables through `dotenv/config`.
 2. It creates an Express application.
-3. It starts the MongoDB connection and configures Cloudinary.
+3. It configures Cloudinary and awaits the MongoDB connection.
 4. It installs JSON parsing and CORS middleware.
-5. It mounts the user, product, plan, and chat routers.
+5. It mounts routers exported by the business modules.
 6. It listens on `PORT`, defaulting to `5001`.
 
-Important detail: database connection is started before `listen`, but it is not
-awaited in `server.js`. The API process may begin accepting requests before the
-database connection finishes or fails.
+The API does not begin listening until the database connection succeeds.
 
 ## 5. Frontend Architecture
 
@@ -206,15 +200,21 @@ VITE_API_URL=http://localhost:5001
 
 ## 6. Backend Architecture
 
-The backend mostly follows a route-controller-model structure:
+The backend is organized as a modular monolith. Each business module owns its
+routes, controllers, services, and models:
 
 ```text
 server.js
-    -> route
+    -> module route
         -> middleware
             -> controller
-                -> Mongoose model / external integration
+                -> service
+                    -> module-owned model / another module's public API
 ```
+
+Current modules are `auth`, `plans`, `chat`, `calendar`, and `share`. Modules
+expose selected operations through `index.js`; their models should remain
+private.
 
 ### Composition root: `server.js`
 
@@ -242,22 +242,13 @@ comma-separated origins from `CLIENT_URLS` or `CLIENT_URL`.
 
 Controllers use `req.userId` both to assign ownership and to restrict queries.
 
-There is also an exported `protect` middleware that is unused and only checks
-`JWT_SECRET`. It should not be treated as part of the active architecture.
+### Module responsibilities
 
-### Controllers
-
-Controllers currently combine several responsibilities:
-
-- request validation
-- authorization queries
-- business rules
-- persistence
-- response formatting
-- external side effects such as email and Cloudinary
-
-This is workable at the current size, but future growth would benefit from
-extracting business services such as `planService` and `notificationService`.
+- `auth`: registration, login, profiles, JWT creation, and the `User` model
+- `plans`: plan lifecycle, authorization queries, and the `DatePlan` model
+- `chat`: messages, system messages, uploads, and the `Message` model
+- `calendar`: read-only coordination of accessible plans and chat images
+- `share`: coordinates plans, users, email invitations, and system messages
 
 ## 7. Data Model
 
@@ -309,7 +300,7 @@ erDiagram
 
 ### User
 
-Source: `backend/models/userModel.js`
+Source: `backend/modules/auth/user.model.js`
 
 - `email` is unique.
 - `password` stores a bcrypt hash, never the original password.
@@ -318,7 +309,7 @@ Source: `backend/models/userModel.js`
 
 ### DatePlan
 
-Source: `backend/models/productModel.js`
+Source: `backend/modules/plans/plan.model.js`
 
 This is the aggregate root of the product. It owns:
 
@@ -351,7 +342,7 @@ pending | confirmed | failed
 
 ### Message
 
-Source: `backend/models/messageModel.js`
+Source: `backend/modules/chat/message.model.js`
 
 A message belongs to a plan, making each shared plan its own conversation.
 Messages may be:
@@ -361,11 +352,6 @@ Messages may be:
 - `system`: generated when a plan is shared, finalized, or edited
 
 The `sender` is null for system messages.
-
-### Unused model
-
-`backend/models/plan.js` is not imported anywhere and is incomplete: it does
-not import Mongoose or export a model. It is not part of the running system.
 
 ## 8. API Reference
 
@@ -438,21 +424,6 @@ The maximum size is 8 MB. Images are uploaded to `dayate/chat` in Cloudinary.
 
 Chat is not realtime. The frontend polls the messages endpoint every four
 seconds.
-
-### Legacy product API
-
-Base path: `/api/product`
-
-| Method | Path | Access | Current state |
-|---|---|---|---|
-| `POST` | `/add` | Public | Attempts to upload images and create a `DatePlan` |
-| `GET` | `/list` | Public | Lists every `DatePlan` in the database |
-| `POST` | `/remove` | Authenticated | Deletes a caller-owned plan |
-
-These endpoints look like an older restaurant/product design but now import the
-`DatePlan` model. The add payload does not match the required `DatePlan` schema,
-and the list endpoint exposes all plans publicly. Treat this router as legacy
-and unsafe until it is removed or redesigned.
 
 ## 9. Feature Flows
 
@@ -588,49 +559,41 @@ the browser bundle.
 
 These are important for learning the real state of the project:
 
-1. **Legacy product endpoints conflict with the current model.**
-   `/api/product/list` publicly exposes all plans, while `/api/product/add`
-   attempts to create invalid plan-shaped data.
-
-2. **Input validation is limited.**
+1. **Input validation is limited.**
    Most plan/chat/profile inputs are accepted directly. Add schema validation
    at the API boundary before growing the product.
 
-3. **HTTP status and error handling are inconsistent.**
+2. **HTTP status and error handling are inconsistent.**
    Many failures return HTTP 200 with `success:false`. There is no global error
    handler.
 
-4. **JWT handling is basic.**
+3. **JWT handling is basic.**
    Tokens have no explicit expiration and live in `localStorage`. There is no
    refresh flow or revocation.
 
-5. **Sharing has a partial-failure risk.**
+4. **Sharing has a partial-failure risk.**
    The plan is saved before email is sent. Email failure can leave sharing
    completed while the API reports an error.
 
-6. **Chat polling does not scale like realtime messaging.**
+5. **Chat polling does not scale like realtime messaging.**
    Every open chat sends a request every four seconds. WebSockets or
    server-sent events would be a later architectural upgrade.
 
-7. **Cloudinary deletion is missing.**
+6. **Cloudinary deletion is missing.**
    Deleting plans/messages leaves uploaded images in Cloudinary.
 
-8. **No automated tests exist.**
+7. **No automated tests exist.**
    Changes currently depend on manual verification.
 
-9. **Naming and dead code cause confusion.**
-   `productModel.js` is actually `DatePlan`; `plan.js`, `protect`,
-   `adminLogin`, and `placeOrder` are unused/incomplete.
-
-10. **Some UI paths are unfinished or inconsistent.**
+8. **Some UI paths are unfinished or inconsistent.**
     Gifts and contact are static, ride creation navigates to the nonexistent
     `/my-planned-dates` route, and cafe reservation uses a hard-coded 2026 date
     when constructing activity time.
 
-11. **Profile update and schema do not fully agree.**
+9. **Profile update and schema do not fully agree.**
     The controller writes `address`, but the user schema does not define it.
 
-12. **No database indexes support common plan queries.**
+10. **No database indexes support common plan queries.**
     As data grows, indexes on `createdBy`, `partner`, `date`, and `finalized`
     will matter.
 
@@ -640,13 +603,12 @@ Use this order to build a correct mental model:
 
 1. Read `frontend/src/App.jsx` to see the user-facing capabilities.
 2. Read `backend/server.js` to see the API boundaries.
-3. Read all files in `backend/routes/` to learn the HTTP contract.
-4. Read `backend/models/productModel.js`, then `userModel.js` and
-   `messageModel.js`.
+3. Read each module's `index.js` and route file to learn the public boundaries.
+4. Read the models inside `modules/plans`, `modules/auth`, and `modules/chat`.
 5. Trace `POST /api/plan/add` from a frontend page through route, middleware,
    controller, and model.
-6. Trace sharing in `planController.js`.
-7. Trace chat access in `chatController.js`.
+6. Trace sharing through `modules/share`.
+7. Trace chat access through `modules/chat`.
 8. Read `dashboardService.js` and `useDashboard.js` as the cleanest frontend
    data-flow example.
 9. Read `SharePlan.jsx` and `Chat.jsx` to understand the more complex pages.
@@ -693,9 +655,7 @@ Complete these in order. Each exercise builds on the previous one.
 
 1. Add request validation for registration and plan creation.
 2. Standardize status codes and add a global Express error handler.
-3. Rename `productModel.js` to `datePlanModel.js` and update imports.
-4. Remove or redesign the legacy product router.
-5. Add plan query indexes.
+3. Add plan query indexes.
 
 ### Level 4: Testing
 
@@ -717,7 +677,7 @@ then the API must deny access.
 
 ### Level 5: Architectural upgrades
 
-1. Move plan business logic from controllers into a plan service.
+1. Move the remaining plan business logic from controllers into services.
 2. Make email delivery asynchronous and retryable.
 3. Add realtime chat with WebSockets.
 4. Delete Cloudinary assets when their messages/plans are deleted.
