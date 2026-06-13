@@ -5,6 +5,11 @@ export const findUserByEmail = (email) => {
   return userModel.findOne({ email });
 };
 
+export const findUserByEmailCaseInsensitive = (email) =>
+  userModel
+    .findOne({ email })
+    .collation({ locale: "en", strength: 2 });
+
 export const findUserById = (id) => {
   return userModel.findById(id).select("-password");
 };
