@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../assets/assets.js";
 import useNearbyRestaurants from "../hooks/useNearbyRestaurants";
 
+const priceLabels = {
+  PRICE_LEVEL_FREE: "Free",
+  PRICE_LEVEL_INEXPENSIVE: "$",
+  PRICE_LEVEL_MODERATE: "$$",
+  PRICE_LEVEL_EXPENSIVE: "$$$",
+  PRICE_LEVEL_VERY_EXPENSIVE: "$$$$",
+};
+
 const Cafes = () => {
   const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState({
+    type: "all",
+    openNow: false,
+    minimumRating: "0",
+    priceLevel: "all",
+  });
   const {
     restaurants,
     loading,
@@ -13,6 +27,36 @@ const Cafes = () => {
     refetch,
     searchByLocation,
   } = useNearbyRestaurants();
+
+  const filteredRestaurants = useMemo(
+    () =>
+      restaurants.filter((restaurant) => {
+        const matchesType =
+          filters.type === "all" || restaurant.type === filters.type;
+        const matchesOpenNow = !filters.openNow || restaurant.isOpen === true;
+        const matchesRating =
+          (restaurant.rating || 0) >= Number(filters.minimumRating);
+        const matchesPrice =
+          filters.priceLevel === "all" ||
+          restaurant.priceLevel === filters.priceLevel;
+
+        return matchesType && matchesOpenNow && matchesRating && matchesPrice;
+      }),
+    [filters, restaurants]
+  );
+
+  const updateFilter = (field, value) => {
+    setFilters((current) => ({ ...current, [field]: value }));
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      type: "all",
+      openNow: false,
+      minimumRating: "0",
+      priceLevel: "all",
+    });
+  };
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -64,6 +108,72 @@ const Cafes = () => {
         </button>
       </form>
 
+      <div className="mb-8 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={filters.type}
+            onChange={(event) => updateFilter("type", event.target.value)}
+            aria-label="Restaurant type"
+            className="rounded-full border border-rose-200 px-4 py-2.5 outline-none focus:border-rose-400"
+          >
+            <option value="all">Restaurants and cafes</option>
+            <option value="restaurant">Restaurants</option>
+            <option value="cafe">Cafes</option>
+          </select>
+
+          <select
+            value={filters.minimumRating}
+            onChange={(event) =>
+              updateFilter("minimumRating", event.target.value)
+            }
+            aria-label="Minimum rating"
+            className="rounded-full border border-rose-200 px-4 py-2.5 outline-none focus:border-rose-400"
+          >
+            <option value="0">Any rating</option>
+            <option value="3">3+ rating</option>
+            <option value="4">4+ rating</option>
+            <option value="4.5">4.5+ rating</option>
+          </select>
+
+          <select
+            value={filters.priceLevel}
+            onChange={(event) => updateFilter("priceLevel", event.target.value)}
+            aria-label="Price level"
+            className="rounded-full border border-rose-200 px-4 py-2.5 outline-none focus:border-rose-400"
+          >
+            <option value="all">Any price</option>
+            <option value="PRICE_LEVEL_INEXPENSIVE">$</option>
+            <option value="PRICE_LEVEL_MODERATE">$$</option>
+            <option value="PRICE_LEVEL_EXPENSIVE">$$$</option>
+            <option value="PRICE_LEVEL_VERY_EXPENSIVE">$$$$</option>
+          </select>
+
+          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-rose-200 px-4 py-2.5">
+            <input
+              type="checkbox"
+              checked={filters.openNow}
+              onChange={(event) => updateFilter("openNow", event.target.checked)}
+              className="accent-rose-500"
+            />
+            Open now
+          </label>
+
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="rounded-full px-4 py-2.5 font-semibold text-rose-500 hover:bg-rose-50"
+          >
+            Reset filters
+          </button>
+        </div>
+
+        {!loading && !error && (
+          <p className="mt-3 text-sm text-slate-500">
+            Showing {filteredRestaurants.length} of {restaurants.length} places
+          </p>
+        )}
+      </div>
+
       {error && (
         <div className="mb-8 rounded-2xl border border-rose-200 bg-rose-50 p-5">
           <p className="font-semibold text-rose-900">{error}</p>
@@ -79,8 +189,17 @@ const Cafes = () => {
         </p>
       )}
 
+      {!loading &&
+        !error &&
+        restaurants.length > 0 &&
+        filteredRestaurants.length === 0 && (
+          <p className="rounded-2xl bg-white p-6 text-slate-600 shadow">
+            No places match these filters. Try resetting them.
+          </p>
+        )}
+
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {restaurants.map((restaurant, index) => {
+        {filteredRestaurants.map((restaurant, index) => {
           const image = index % 2 === 0 ? assets.image1 : assets.image2;
 
           return (
@@ -111,6 +230,11 @@ const Cafes = () => {
                 ? `${restaurant.rating}/5 (${restaurant.reviewCount} reviews)`
                 : "No ratings yet"}
             </p>
+            {restaurant.priceLevel && (
+              <p className="mt-2 text-sm font-semibold text-slate-600">
+                {priceLabels[restaurant.priceLevel] || restaurant.priceLevel}
+              </p>
+            )}
             <p className="mt-4 text-sm font-semibold text-rose-500">
               Add to date plan
             </p>
