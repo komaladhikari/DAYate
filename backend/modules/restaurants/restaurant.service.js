@@ -2,6 +2,8 @@ import axios from "axios";
 
 const PLACES_NEARBY_URL =
   "https://places.googleapis.com/v1/places:searchNearby";
+const PLACES_TEXT_SEARCH_URL =
+  "https://places.googleapis.com/v1/places:searchText";
 
 const PLACE_FIELDS = [
   "places.id",
@@ -30,17 +32,25 @@ const normalizeRestaurant = (place) => ({
   type: place.primaryType || "restaurant",
 });
 
-export const findNearbyRestaurants = async ({
-  latitude,
-  longitude,
-  radius,
-}) => {
+const getPlacesHeaders = () => {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
 
   if (!apiKey) {
     throw new Error("Google Places API key is not configured");
   }
 
+  return {
+    "Content-Type": "application/json",
+    "X-Goog-Api-Key": apiKey,
+    "X-Goog-FieldMask": PLACE_FIELDS,
+  };
+};
+
+export const findNearbyRestaurants = async ({
+  latitude,
+  longitude,
+  radius,
+}) => {
   try {
     const response = await axios.post(
       PLACES_NEARBY_URL,
@@ -56,11 +66,7 @@ export const findNearbyRestaurants = async ({
         },
       },
       {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": apiKey,
-          "X-Goog-FieldMask": PLACE_FIELDS,
-        },
+        headers: getPlacesHeaders(),
       }
     );
 
@@ -72,5 +78,30 @@ export const findNearbyRestaurants = async ({
   } catch (error) {
     const providerMessage = error.response?.data?.error?.message;
     throw new Error(providerMessage || "Could not load nearby restaurants");
+  }
+};
+
+export const searchRestaurantsByLocation = async (query) => {
+  try {
+    const response = await axios.post(
+      PLACES_TEXT_SEARCH_URL,
+      {
+        textQuery: `restaurants and cafes near ${query}`,
+        includedType: "restaurant",
+        maxResultCount: 12,
+        rankPreference: "RELEVANCE",
+      },
+      {
+        headers: getPlacesHeaders(),
+      }
+    );
+
+    return {
+      query,
+      restaurants: (response.data.places || []).map(normalizeRestaurant),
+    };
+  } catch (error) {
+    const providerMessage = error.response?.data?.error?.message;
+    throw new Error(providerMessage || "Could not search restaurants");
   }
 };

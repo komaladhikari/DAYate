@@ -32,4 +32,26 @@ const getNearbyRestaurants = async ({
   return data.data.restaurants;
 };
 
-export { getNearbyRestaurants };
+const searchRestaurants = async ({ query, signal }) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Please sign in to search restaurants.");
+  }
+
+  const params = new URLSearchParams({ query });
+  const response = await fetch(`${API}/api/restaurants/search?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Could not search restaurants.");
+  }
+
+  return data.data.restaurants;
+};
+
+export { getNearbyRestaurants, searchRestaurants };

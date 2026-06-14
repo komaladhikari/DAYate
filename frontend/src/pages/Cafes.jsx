@@ -1,9 +1,27 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../assets/assets.js";
 import useNearbyRestaurants from "../hooks/useNearbyRestaurants";
 
 const Cafes = () => {
-  const { restaurants, loading, error, refetch } = useNearbyRestaurants();
+  const [query, setQuery] = useState("");
+  const {
+    restaurants,
+    loading,
+    error,
+    locationLabel,
+    refetch,
+    searchByLocation,
+  } = useNearbyRestaurants();
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+
+    const trimmedQuery = query.trim();
+    if (trimmedQuery.length >= 2) {
+      searchByLocation(trimmedQuery);
+    }
+  };
 
   return (
     <section className="py-10 sm:py-14 lg:py-20">
@@ -11,7 +29,7 @@ const Cafes = () => {
         <div>
           <h1 className="text-4xl font-black">Restaurants Near You</h1>
           <p className="mt-2 text-slate-600">
-            Suggestions based on your current location.
+            Showing suggestions around {locationLabel}.
           </p>
         </div>
 
@@ -25,11 +43,32 @@ const Cafes = () => {
         </button>
       </div>
 
+      <form
+        onSubmit={handleSearch}
+        className="mb-8 flex max-w-2xl flex-col gap-3 sm:flex-row"
+      >
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search a city, neighborhood, or address"
+          minLength={2}
+          maxLength={120}
+          required
+          className="min-w-0 flex-1 rounded-full border border-rose-200 bg-white px-5 py-3 outline-none focus:border-rose-400"
+        />
+        <button
+          disabled={loading}
+          className="rounded-full bg-rose-500 px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Search location
+        </button>
+      </form>
+
       {error && (
         <div className="mb-8 rounded-2xl border border-rose-200 bg-rose-50 p-5">
           <p className="font-semibold text-rose-900">{error}</p>
           <p className="mt-1 text-sm text-rose-700">
-            Allow location access in your browser settings, then try again.
+            Try entering a city, neighborhood, or address above.
           </p>
         </div>
       )}
