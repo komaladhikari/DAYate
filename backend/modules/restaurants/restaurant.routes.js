@@ -3,11 +3,13 @@ import authUser from "../../shared/middleware/authUser.js";
 import {
   listNearbyRestaurants,
   searchRestaurants,
+  showRestaurantPhoto,
 } from "./restaurant.controller.js";
 
 const restaurantRouter = express.Router();
 
 restaurantRouter.get("/nearby", authUser, listNearbyRestaurants);
 restaurantRouter.get("/search", authUser, searchRestaurants);
+restaurantRouter.get("/photo", showRestaurantPhoto);
 
 export default restaurantRouter;

@@ -1,5 +1,6 @@
 import {
   findNearbyRestaurants,
+  getRestaurantPhoto,
   searchRestaurantsByLocation,
 } from "./restaurant.service.js";
 
@@ -60,4 +61,37 @@ const searchRestaurants = async (req, res) => {
   }
 };
 
-export { listNearbyRestaurants, searchRestaurants };
+const showRestaurantPhoto = async (req, res) => {
+  try {
+    const photoName = req.query.name?.trim();
+    const maxWidth = Math.min(Math.max(Number(req.query.width) || 800, 1), 1600);
+    const maxHeight = Math.min(
+      Math.max(Number(req.query.height) || 600, 1),
+      1600
+    );
+
+    if (!/^places\/[^/]+\/photos\/[^/]+$/.test(photoName || "")) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid Google place photo name is required",
+      });
+    }
+
+    const photoResponse = await getRestaurantPhoto({
+      photoName,
+      maxWidth,
+      maxHeight,
+    });
+
+    res.setHeader(
+      "Content-Type",
+      photoResponse.headers["content-type"] || "image/jpeg"
+    );
+    res.setHeader("Cache-Control", "no-store");
+    photoResponse.data.pipe(res);
+  } catch (error) {
+    res.status(502).json({ success: false, message: error.message });
+  }
+};
+
+export { listNearbyRestaurants, searchRestaurants, showRestaurantPhoto };

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../assets/assets.js";
 import useNearbyRestaurants from "../hooks/useNearbyRestaurants";
+import { getRestaurantPhotoUrl } from "../services/restaurantService";
 
 const priceLabels = {
   PRICE_LEVEL_FREE: "Free",
@@ -200,19 +201,24 @@ const Cafes = () => {
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {filteredRestaurants.map((restaurant, index) => {
-          const image = index % 2 === 0 ? assets.image1 : assets.image2;
+          const fallbackImage = index % 2 === 0 ? assets.image1 : assets.image2;
+          const image =
+            getRestaurantPhotoUrl(restaurant.photoName) || fallbackImage;
 
           return (
           <Link
             key={restaurant.id}
             to={`/cafes/${restaurant.id}`}
-            state={{ cafe: { ...restaurant, img: image } }}
+            state={{ cafe: { ...restaurant, img: image, fallbackImage } }}
             className="rounded-3xl bg-rose-50 p-4 text-center shadow-md transition hover:-translate-y-1 hover:bg-rose-100"
           >
             <div className="rounded-2xl overflow-hidden bg-rose-100 p-3">
               <img
                 src={image}
                 alt=""
+                onError={(event) => {
+                  event.currentTarget.src = fallbackImage;
+                }}
                 className="h-40 w-full rounded-lg object-cover"
               />
             </div>
@@ -233,6 +239,29 @@ const Cafes = () => {
             {restaurant.priceLevel && (
               <p className="mt-2 text-sm font-semibold text-slate-600">
                 {priceLabels[restaurant.priceLevel] || restaurant.priceLevel}
+              </p>
+            )}
+            {restaurant.photoAttributions?.length > 0 && (
+              <p className="mt-2 text-xs text-slate-500">
+                Photo by{" "}
+                {restaurant.photoAttributions.map((attribution, position) => (
+                  <span key={`${restaurant.id}-${attribution.displayName}`}>
+                    {position > 0 && ", "}
+                    {attribution.uri ? (
+                      <a
+                        href={attribution.uri}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(event) => event.stopPropagation()}
+                        className="underline"
+                      >
+                        {attribution.displayName}
+                      </a>
+                    ) : (
+                      attribution.displayName
+                    )}
+                  </span>
+                ))}
               </p>
             )}
             <p className="mt-4 text-sm font-semibold text-rose-500">

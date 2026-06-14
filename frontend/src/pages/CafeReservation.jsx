@@ -83,7 +83,38 @@ const CafeReservation = () => {
   return (
     <section className="py-10 sm:py-14 lg:py-20">
       <div className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-lg">
-        <img src={cafe.img} alt={cafe.name} className="h-56 w-full rounded-2xl object-cover" />
+        <img
+          src={cafe.img}
+          alt={cafe.name}
+          onError={(event) => {
+            if (cafe.fallbackImage) {
+              event.currentTarget.src = cafe.fallbackImage;
+            }
+          }}
+          className="h-56 w-full rounded-2xl object-cover"
+        />
+        {cafe.photoAttributions?.length > 0 && (
+          <p className="mt-2 text-xs text-slate-500">
+            Photo by{" "}
+            {cafe.photoAttributions.map((attribution, position) => (
+              <span key={`${cafe.id}-${attribution.displayName}`}>
+                {position > 0 && ", "}
+                {attribution.uri ? (
+                  <a
+                    href={attribution.uri}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline"
+                  >
+                    {attribution.displayName}
+                  </a>
+                ) : (
+                  attribution.displayName
+                )}
+              </span>
+            ))}
+          </p>
+        )}
 
         <h1 className="mt-6 text-3xl font-black">{cafe.name}</h1>
         <p className="mt-2 text-sm text-slate-600">{cafe.address}</p>

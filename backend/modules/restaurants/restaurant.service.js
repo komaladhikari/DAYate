@@ -16,6 +16,7 @@ const PLACE_FIELDS = [
   "places.currentOpeningHours.openNow",
   "places.googleMapsUri",
   "places.primaryType",
+  "places.photos",
 ].join(",");
 
 const normalizeRestaurant = (place) => ({
@@ -30,6 +31,13 @@ const normalizeRestaurant = (place) => ({
   isOpen: place.currentOpeningHours?.openNow ?? null,
   mapsUrl: place.googleMapsUri || "",
   type: place.primaryType || "restaurant",
+  photoName: place.photos?.[0]?.name || "",
+  photoAttributions: (place.photos?.[0]?.authorAttributions || []).map(
+    (attribution) => ({
+      displayName: attribution.displayName || "",
+      uri: attribution.uri || "",
+    })
+  ),
 });
 
 const getPlacesHeaders = () => {
@@ -103,5 +111,33 @@ export const searchRestaurantsByLocation = async (query) => {
   } catch (error) {
     const providerMessage = error.response?.data?.error?.message;
     throw new Error(providerMessage || "Could not search restaurants");
+  }
+};
+
+export const getRestaurantPhoto = async ({
+  photoName,
+  maxWidth,
+  maxHeight,
+}) => {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("Google Places API key is not configured");
+  }
+
+  try {
+    return await axios.get(
+      `https://places.googleapis.com/v1/${photoName}/media`,
+      {
+        params: {
+          key: apiKey,
+          maxWidthPx: maxWidth,
+          maxHeightPx: maxHeight,
+        },
+        responseType: "stream",
+      }
+    );
+  } catch {
+    throw new Error("Could not load restaurant photo");
   }
 };

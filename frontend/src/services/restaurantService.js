@@ -1,5 +1,17 @@
 const API = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com";
 
+const getRestaurantPhotoUrl = (photoName, width = 800, height = 600) => {
+  if (!photoName) return "";
+
+  const params = new URLSearchParams({
+    name: photoName,
+    width,
+    height,
+  });
+
+  return `${API}/api/restaurants/photo?${params}`;
+};
+
 const getNearbyRestaurants = async ({
   latitude,
   longitude,
@@ -54,4 +66,4 @@ const searchRestaurants = async ({ query, signal }) => {
   return data.data.restaurants;
 };
 
-export { getNearbyRestaurants, searchRestaurants };
+export { getNearbyRestaurants, getRestaurantPhotoUrl, searchRestaurants };
