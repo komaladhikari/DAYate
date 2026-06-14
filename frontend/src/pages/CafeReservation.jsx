@@ -1,55 +1,84 @@
-import React, { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com"
+const API = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com";
+
+const getToday = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60 * 1000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+};
 
 const CafeReservation = () => {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const cafe = location.state?.cafe
+  const location = useLocation();
+  const navigate = useNavigate();
+  const cafe = location.state?.cafe;
 
-  const [time, setTime] = useState('')
+  const [date, setDate] = useState(getToday);
+  const [time, setTime] = useState("");
+  const [saving, setSaving] = useState(false);
 
   if (!cafe) {
-    return <p className="py-10">Cafe not found. Go back and select a cafe.</p>
+    return <p className="py-10">Restaurant not found. Go back and select one.</p>;
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const newPlan = {
-      name: `${cafe.name} Date`,
-      date: new Date().toISOString(),
-      title: cafe.name,
-      location: cafe.name,
-      time: new Date(`2026-01-01T${time}`).toISOString(),
-    }
     const token = localStorage.getItem("token");
 
     if (!token) {
-    alert("Please login first");
-    navigate("/login");
-    return;
+      alert("Please login first");
+      navigate("/login");
+      return;
     }
-    const res = await fetch(`${API}/api/plan/add`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      
-      body: JSON.stringify(newPlan),
-    });
 
-    const data = await res.json()
+    const selectedDateTime = new Date(`${date}T${time}`);
+    const planDate = new Date(`${date}T00:00:00`);
 
-    if (data.success) {
-      alert("Plan saved to database!")
-      navigate("/dashboard")
-    } else {
-      alert(data.message || "Failed to save plan")
+    setSaving(true);
+
+    try {
+      const res = await fetch(`${API}/api/plan/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: `${cafe.name} Date`,
+          date: planDate.toISOString(),
+          type: "restaurant",
+          title: cafe.name,
+          location: cafe.address || cafe.name,
+          time: selectedDateTime.toISOString(),
+          providerPlaceId: cafe.id,
+          address: cafe.address,
+          coordinates: {
+            latitude: cafe.latitude,
+            longitude: cafe.longitude,
+          },
+          mapsUrl: cafe.mapsUrl,
+          rating: cafe.rating,
+          reviewCount: cafe.reviewCount,
+          priceLevel: cafe.priceLevel,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Restaurant added to your date plan!");
+        navigate("/my-plans");
+      } else {
+        alert(data.message || "Failed to save plan");
+      }
+    } catch {
+      alert("Failed to save plan");
+    } finally {
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <section className="py-10 sm:py-14 lg:py-20">
@@ -57,28 +86,57 @@ const CafeReservation = () => {
         <img src={cafe.img} alt={cafe.name} className="h-56 w-full rounded-2xl object-cover" />
 
         <h1 className="mt-6 text-3xl font-black">{cafe.name}</h1>
-        <p className="mt-2 text-sm">⏰ Open: {cafe.open}</p>
-        <p className="text-sm">⏰ Close: {cafe.close}</p>
-        <p className="mt-2 text-sm">⭐ {cafe.rating}</p>
+        <p className="mt-2 text-sm text-slate-600">{cafe.address}</p>
+        <p className="mt-2 text-sm">
+          {cafe.rating
+            ? `${cafe.rating}/5 (${cafe.reviewCount} reviews)`
+            : "No ratings yet"}
+        </p>
+        {cafe.mapsUrl && (
+          <a
+            href={cafe.mapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-block text-sm font-semibold text-rose-500"
+          >
+            View on Google Maps
+          </a>
+        )}
 
-        <form onSubmit={handleSubmit} className="mt-6">
-          <label className="font-semibold">Reservation time</label>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <label className="block font-semibold">
+            Date
+            <input
+              type="date"
+              min={getToday()}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              className="mt-2 w-full rounded-xl border p-3 font-normal"
+            />
+          </label>
 
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            required
-            className="mt-2 w-full rounded-xl border p-3"
-          />
+          <label className="block font-semibold">
+            Time
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              required
+              className="mt-2 w-full rounded-xl border p-3 font-normal"
+            />
+          </label>
 
-          <button className="mt-5 w-full rounded-full bg-slate-900 px-6 py-3 font-bold text-white">
-            Add to Date Plan
+          <button
+            disabled={saving}
+            className="w-full rounded-full bg-slate-900 px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "Adding..." : "Add to Date Plan"}
           </button>
         </form>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default CafeReservation
+export default CafeReservation;

@@ -23,6 +23,16 @@ const normalizeActivities = (activities = []) =>
     location: activity.location || "",
     from: activity.from || "",
     to: activity.to || "",
+    providerPlaceId: activity.providerPlaceId || "",
+    address: activity.address || "",
+    coordinates: {
+      latitude: activity.coordinates?.latitude ?? null,
+      longitude: activity.coordinates?.longitude ?? null,
+    },
+    mapsUrl: activity.mapsUrl || "",
+    rating: activity.rating ?? null,
+    reviewCount: activity.reviewCount ?? 0,
+    priceLevel: activity.priceLevel || "",
     bookingStatus: activity.bookingStatus || "",
   }));
 
@@ -66,7 +76,23 @@ const describePlanChanges = (plan, updates) => {
 
 const addPlan = async (req, res) => {
   try {
-    const { name, date, time, location, title, from, to, } = req.body;
+    const {
+      name,
+      date,
+      time,
+      location,
+      title,
+      type,
+      from,
+      to,
+      providerPlaceId,
+      address,
+      coordinates,
+      mapsUrl,
+      rating,
+      reviewCount,
+      priceLevel,
+    } = req.body;
 
     const plan = new DatePlan({
       name,
@@ -74,12 +100,19 @@ const addPlan = async (req, res) => {
       createdBy: req.userId,
       activities: [
         {
-          type: "restaurant",
+          type: type || "restaurant",
           title,
           time,
           location,
           from,
           to,
+          providerPlaceId,
+          address,
+          coordinates,
+          mapsUrl,
+          rating,
+          reviewCount,
+          priceLevel,
           bookingStatus: "pending",
         },
       ],
