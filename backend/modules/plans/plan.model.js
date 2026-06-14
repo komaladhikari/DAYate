@@ -22,6 +22,16 @@ const datePlanSchema = new mongoose.Schema(
         location: String,
         from: String,
         to: String,
+        providerPlaceId: String,
+        address: String,
+        coordinates: {
+          latitude: Number,
+          longitude: Number,
+        },
+        mapsUrl: String,
+        rating: Number,
+        reviewCount: Number,
+        priceLevel: String,
         bookingStatus: { type: String, enum: ["pending", "confirmed", "failed"] }
       }
     ]

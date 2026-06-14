@@ -8,6 +8,8 @@ import { planRouter } from "./modules/plans/index.js";
 import { chatRouter } from "./modules/chat/index.js";
 import { calendarRouter } from "./modules/calendar/index.js";
 import { shareRouter } from "./modules/share/index.js";
+import { restaurantRouter } from "./modules/restaurants/index.js";
+
 
 //app configuration
 const app = express();
@@ -47,6 +49,7 @@ app.use("/api/plan/share", shareRouter);
 app.use("/api/plan", planRouter); // import plan router and use it for all routes starting with /api/plan
 app.use("/api/chat/calendar", calendarRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/restaurants", restaurantRouter);
 
 
 app.get('/',(req,res)=>{
