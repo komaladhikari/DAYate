@@ -69,7 +69,8 @@ const Cafes = () => {
   };
 
   return (
-    <section className="py-10 sm:py-14 lg:py-20">
+    <section className="min-h-screen bg-[#ffbf8b] px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20">
+      <div className="mx-auto max-w-7xl">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-black">Restaurants Near You</h1>
@@ -103,7 +104,7 @@ const Cafes = () => {
         />
         <button
           disabled={loading}
-          className="rounded-full bg-rose-500 px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full bg-slate-900 px-5 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           Search location
         </button>
@@ -270,6 +271,7 @@ const Cafes = () => {
           </Link>
           );
         })}
+      </div>
       </div>
     </section>
   );
