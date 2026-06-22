@@ -24,7 +24,7 @@ export const createUser = (userData) => {
 
 export const updateUserById = (id, updateData) => {
   return userModel
-    .findByIdAndUpdate(id, updateData, { new: true })
+    .findByIdAndUpdate(id, updateData, { returnDocument: "after" })
     .select("-password");
 };
 
