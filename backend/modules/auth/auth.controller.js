@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import {
   findUserByEmail,
   findUserById,
+  findUserWithPasswordById,
   createUser,
   updateUserById,
   createToken,
@@ -89,14 +90,25 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { name, email, phone, address } = req.body;
+    const { name, email, phone, address, bio, timezone, profilePicture } = req.body;
 
-    const updatedUser = await updateUserById(req.userId, {
+    const updateData = {
       name,
       email,
       phone,
       address,
+      bio,
+      timezone,
+      profilePicture,
+    };
+
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
     });
+
+    const updatedUser = await updateUserById(req.userId, updateData);
 
     res.json({
       success: true,
@@ -107,6 +119,50 @@ const updateUserProfile = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+const updateUserPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.json({
+        success: false,
+        message: "Please enter a stronger password",
+      });
+    }
+
+    const user = await findUserWithPasswordById(req.userId);
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ success: true, message: "Password updated" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 //route for admin login
 const adminLogin = async (req,res)=>{
 
@@ -117,4 +173,5 @@ export {
   adminLogin,
   getUserProfile,
   updateUserProfile,
+  updateUserPassword,
 };

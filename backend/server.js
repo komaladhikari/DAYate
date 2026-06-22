@@ -29,9 +29,18 @@ const allowedOrigins = [
         .filter(Boolean)),
 ];
 
+const isLocalViteOrigin = (origin) =>
+    /^http:\/\/(localhost|127\.0\.0\.1):517\d$/.test(origin);
+
 app.use(cors({
     origin(origin, callback) {
-        if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+        const normalizedOrigin = origin?.replace(/\/$/, '');
+
+        if (
+            !origin ||
+            allowedOrigins.includes(normalizedOrigin) ||
+            isLocalViteOrigin(normalizedOrigin)
+        ) {
             callback(null, true);
             return;
         }
