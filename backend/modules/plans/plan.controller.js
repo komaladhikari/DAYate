@@ -79,6 +79,7 @@ const addPlan = async (req, res) => {
     const {
       name,
       date,
+      activities,
       time,
       location,
       title,
@@ -94,28 +95,47 @@ const addPlan = async (req, res) => {
       priceLevel,
     } = req.body;
 
+    const planActivities = Array.isArray(activities) && activities.length > 0
+      ? activities.map((activity) => ({
+          type: activity.type || "restaurant",
+          title: activity.title,
+          time: activity.time,
+          location: activity.location,
+          from: activity.from,
+          to: activity.to,
+          providerPlaceId: activity.providerPlaceId,
+          address: activity.address,
+          coordinates: activity.coordinates,
+          mapsUrl: activity.mapsUrl,
+          rating: activity.rating,
+          reviewCount: activity.reviewCount,
+          priceLevel: activity.priceLevel,
+          bookingStatus: activity.bookingStatus || "pending",
+        }))
+      : [
+          {
+            type: type || "restaurant",
+            title,
+            time,
+            location,
+            from,
+            to,
+            providerPlaceId,
+            address,
+            coordinates,
+            mapsUrl,
+            rating,
+            reviewCount,
+            priceLevel,
+            bookingStatus: "pending",
+          },
+        ];
+
     const plan = new DatePlan({
       name,
       date,
       createdBy: req.userId,
-      activities: [
-        {
-          type: type || "restaurant",
-          title,
-          time,
-          location,
-          from,
-          to,
-          providerPlaceId,
-          address,
-          coordinates,
-          mapsUrl,
-          rating,
-          reviewCount,
-          priceLevel,
-          bookingStatus: "pending",
-        },
-      ],
+      activities: planActivities,
     });
 
     await plan.save();
