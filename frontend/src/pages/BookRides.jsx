@@ -1,121 +1,75 @@
-import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { assets } from "../assets/assets.js";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
+const steps = [
+  "Pick a restaurant",
+  "Tap Book Uber",
+  "Confirm the ride in Uber",
+  "Tap I booked my ride",
+  "See the ride in your plan",
+];
 
 const BookRides = () => {
-  const navigate = useNavigate();
-
-  const backendUrl = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com";
-
-  const [form, setForm] = useState({
-    from: "",
-    to: "",
-    time: "",
-  });
-
-  const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("Please login first");
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${backendUrl}/api/plan/add`,
-        {
-          name: "Ride Booking",
-          date: new Date().toISOString(),
-          title: "Ride",
-          type: "ride",
-          from: form.from,
-          to: form.to,
-          time: form.time,
-          location: form.to,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        alert("Ride booked successfully!");
-        navigate("/my-planned-dates");
-      } else {
-        alert(response.data.message);
-      }
-    } catch (error) {
-      console.log(error);
-      alert("Failed to book ride");
-    }
-  };
-
   return (
-    <section className="py-10 sm:py-14 lg:py-20">
-      <h1 className="text-4xl font-black mb-8">Book Rides</h1>
+    <section className="min-h-screen bg-[#fff7ef] px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_0.9fr]">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-[#ff6b1a]">
+            Phase 1 Ride Flow
+          </p>
 
-      <div className="grid gap-8 lg:grid-cols-2 items-center">
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-md">
-          <label className="block">
-            <span className="text-slate-700 mb-2 block">From</span>
-            <input
-              name="from"
-              value={form.from}
-              onChange={handleChange}
-              placeholder="Pickup location"
-              required
-              className="w-full rounded-2xl bg-[#ffd6b8] px-4 py-4 outline-none"
-            />
-          </label>
+          <h1 className="mt-4 max-w-2xl text-4xl font-black leading-tight text-slate-950 sm:text-5xl">
+            Book the ride after you choose the restaurant.
+          </h1>
 
-          <label className="block">
-            <span className="text-slate-700 mb-2 block">To</span>
-            <input
-              name="to"
-              value={form.to}
-              onChange={handleChange}
-              placeholder="Destination"
-              required
-              className="w-full rounded-2xl bg-[#ffd6b8] px-4 py-4 outline-none"
-            />
-          </label>
+          <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
+            For now, DAYate opens Uber for the selected restaurant, then you
+            confirm once the ride is booked so it can appear in your date plan.
+          </p>
 
-          <label className="block">
-            <span className="text-slate-700 mb-2 block">Time</span>
-            <input
-              name="time"
-              value={form.time}
-              onChange={handleChange}
-              type="time"
-              required
-              className="w-full rounded-2xl bg-[#ffd6b8] px-4 py-4 outline-none"
-            />
-          </label>
+          <div className="mt-8 space-y-3">
+            {steps.map((step, index) => (
+              <div
+                key={step}
+                className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white">
+                  {index + 1}
+                </span>
+                <span className="font-semibold text-slate-800">{step}</span>
+              </div>
+            ))}
+          </div>
 
-          <button
-            type="submit"
-            className="mt-2 inline-block rounded-full bg-linear-to-r from-rose-500 to-amber-400 px-6 py-3 text-white font-semibold"
-          >
-            Book Ride
-          </button>
-        </form>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              to="/cafes"
+              className="inline-flex justify-center rounded-full bg-slate-950 px-6 py-3 font-bold text-white transition hover:bg-slate-800"
+            >
+              Choose Restaurant
+            </Link>
+            <Link
+              to="/my-plans"
+              className="inline-flex justify-center rounded-full border border-[#ff9847] px-6 py-3 font-bold text-[#d76c1d] transition hover:bg-orange-50"
+            >
+              View My Plans
+            </Link>
+          </div>
+        </div>
 
-        <div className="rounded-2xl overflow-hidden bg-white p-6 shadow-lg">
+        <div className="rounded-3xl bg-white p-5 shadow-lg">
           <img
             src={assets.image2}
-            alt="map placeholder"
-            className="w-full h-72 object-cover rounded-lg"
+            alt="DAYate ride planning"
+            className="h-80 w-full rounded-2xl object-cover"
           />
+          <div className="mt-5 rounded-2xl bg-rose-50 p-4">
+            <p className="font-bold text-slate-950">Where the Uber button lives</p>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Go to Restaurants, pick a place, then the restaurant detail page
+              will show the Book Uber and I booked my ride buttons.
+            </p>
+          </div>
         </div>
       </div>
     </section>
