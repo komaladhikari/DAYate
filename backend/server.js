@@ -9,6 +9,7 @@ import { chatRouter } from "./modules/chat/index.js";
 import { calendarRouter } from "./modules/calendar/index.js";
 import { shareRouter } from "./modules/share/index.js";
 import { restaurantRouter } from "./modules/restaurants/index.js";
+import { giftRouter } from "./modules/gifts/index.js";
 
 
 //app configuration
@@ -59,6 +60,7 @@ app.use("/api/plan", planRouter); // import plan router and use it for all route
 app.use("/api/chat/calendar", calendarRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/restaurants", restaurantRouter);
+app.use("/api/gifts", giftRouter);
 
 
 app.get('/',(req,res)=>{
