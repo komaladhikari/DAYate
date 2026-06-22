@@ -89,14 +89,25 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { name, email, phone, address } = req.body;
+    const { name, email, phone, address, bio, timezone, profilePicture } = req.body;
 
-    const updatedUser = await updateUserById(req.userId, {
+    const updateData = {
       name,
       email,
       phone,
       address,
+      bio,
+      timezone,
+      profilePicture,
+    };
+
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
     });
+
+    const updatedUser = await updateUserById(req.userId, updateData);
 
     res.json({
       success: true,

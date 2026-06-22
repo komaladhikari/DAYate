@@ -25,6 +25,32 @@ const InfoRow = ({ label, value }) => (
   </div>
 );
 
+const EditField = ({ label, name, value, onChange, type = "text" }) => (
+  <label className="block">
+    <span className="text-sm font-bold text-slate-700">{label}</span>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="mt-2 w-full rounded-xl border border-orange-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#ff8b3d] focus:ring-4 focus:ring-orange-100"
+    />
+  </label>
+);
+
+const EditTextArea = ({ label, name, value, onChange }) => (
+  <label className="block">
+    <span className="text-sm font-bold text-slate-700">{label}</span>
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      rows={4}
+      className="mt-2 w-full resize-none rounded-xl border border-orange-100 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#ff8b3d] focus:ring-4 focus:ring-orange-100"
+    />
+  </label>
+);
+
 const PreferenceRow = ({ title, description, enabled }) => (
   <div className="flex items-center justify-between gap-4 border-b border-slate-100 py-4 last:border-b-0">
     <div>
@@ -47,8 +73,32 @@ const Profile = () => {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    bio: "",
+    timezone: "",
+    profilePicture: "",
+  });
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const syncFormData = (profile) => {
+    setFormData({
+      name: profile?.name || "",
+      email: profile?.email || "",
+      phone: profile?.phone || "",
+      address: profile?.address || "",
+      bio: profile?.bio || "",
+      timezone: profile?.timezone || "",
+      profilePicture: profile?.profilePicture || "",
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -72,6 +122,7 @@ const Profile = () => {
 
         if (response.data.success) {
           setUser(response.data.user);
+          syncFormData(response.data.user);
           setError("");
         } else {
           setError(response.data.message || "Could not load your profile.");
@@ -100,6 +151,68 @@ const Profile = () => {
     if (user?.email) return user.email.split("@")[0];
     return "DAYate User";
   }, [user]);
+
+  const handleFieldChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const openEditor = () => {
+    syncFormData(user);
+    setSuccessMessage("");
+    setError("");
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    syncFormData(user);
+    setIsEditing(false);
+    setSuccessMessage("");
+    setError("");
+  };
+
+  const saveProfile = async (event) => {
+    event.preventDefault();
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    setIsSaving(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await axios.put(
+        `${backendUrl}/api/user/profile`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setUser(response.data.user);
+        syncFormData(response.data.user);
+        setIsEditing(false);
+        setSuccessMessage("Profile updated successfully.");
+      } else {
+        setError(response.data.message || "Could not update your profile.");
+      }
+    } catch (profileError) {
+      console.log(profileError);
+      setError("Could not update your profile. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -171,6 +284,7 @@ const Profile = () => {
 
           <button
             type="button"
+            onClick={openEditor}
             className="inline-flex items-center justify-center gap-3 rounded-xl border border-[#ff8b3d] px-7 py-4 text-sm font-black text-[#f97316] transition hover:bg-orange-50"
           >
             <Edit3 size={18} />
@@ -178,6 +292,18 @@ const Profile = () => {
           </button>
         </div>
       </div>
+
+      {(successMessage || error) && (
+        <div
+          className={`mt-5 rounded-2xl border p-4 text-sm font-bold ${
+            successMessage
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-red-200 bg-red-50 text-red-700"
+          }`}
+        >
+          {successMessage || error}
+        </div>
+      )}
 
       <div className="mt-7 grid gap-7 lg:grid-cols-2">
         <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-lg shadow-orange-100/35">
@@ -188,21 +314,92 @@ const Profile = () => {
             </h3>
           </div>
 
-          <dl>
-            <InfoRow label="Full Name" value={user.name || displayName} />
-            <InfoRow label="Email Address" value={user.email} />
-            <InfoRow label="Phone Number" value={user.phone} />
-            <InfoRow label="Bio" value={user.bio} />
-            <InfoRow label="Time Zone" value={user.timezone} />
-            <InfoRow label="Location" value={user.address || "Not added yet"} />
-          </dl>
+          {isEditing ? (
+            <form onSubmit={saveProfile} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <EditField
+                  label="Full Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleFieldChange}
+                />
+                <EditField
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleFieldChange}
+                />
+                <EditField
+                  label="Phone Number"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleFieldChange}
+                />
+                <EditField
+                  label="Time Zone"
+                  name="timezone"
+                  value={formData.timezone}
+                  onChange={handleFieldChange}
+                />
+              </div>
+              <EditField
+                label="Location"
+                name="address"
+                value={formData.address}
+                onChange={handleFieldChange}
+              />
+              <EditField
+                label="Profile Picture URL"
+                name="profilePicture"
+                value={formData.profilePicture}
+                onChange={handleFieldChange}
+              />
+              <EditTextArea
+                label="Bio"
+                name="bio"
+                value={formData.bio}
+                onChange={handleFieldChange}
+              />
 
-          <button
-            type="button"
-            className="mx-auto mt-5 flex w-full max-w-56 items-center justify-center rounded-xl border border-[#ff8b3d] px-5 py-3 text-sm font-black text-[#f97316] transition hover:bg-orange-50"
-          >
-            Edit Information
-          </button>
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#ff8b3d] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#f97316] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  disabled={isSaving}
+                  className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <dl>
+                <InfoRow label="Full Name" value={user.name || displayName} />
+                <InfoRow label="Email Address" value={user.email} />
+                <InfoRow label="Phone Number" value={user.phone} />
+                <InfoRow label="Bio" value={user.bio} />
+                <InfoRow label="Time Zone" value={user.timezone} />
+                <InfoRow label="Location" value={user.address} />
+              </dl>
+
+              <button
+                type="button"
+                onClick={openEditor}
+                className="mx-auto mt-5 flex w-full max-w-56 items-center justify-center rounded-xl border border-[#ff8b3d] px-5 py-3 text-sm font-black text-[#f97316] transition hover:bg-orange-50"
+              >
+                Edit Information
+              </button>
+            </>
+          )}
         </div>
 
         <div className="space-y-7">
