@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   Clock3,
   Edit3,
+  Eye,
+  EyeOff,
   LockKeyhole,
   Mail,
   MapPin,
@@ -51,6 +53,36 @@ const EditTextArea = ({ label, name, value, onChange }) => (
   </label>
 );
 
+const PasswordField = ({
+  label,
+  name,
+  value,
+  onChange,
+  isVisible,
+  onToggle,
+}) => (
+  <label className="block">
+    <span className="text-sm font-bold text-slate-700">{label}</span>
+    <div className="mt-2 flex items-center rounded-xl border border-orange-100 bg-white focus-within:border-[#ff8b3d] focus-within:ring-4 focus-within:ring-orange-100">
+      <input
+        type={isVisible ? "text" : "password"}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="min-w-0 flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-slate-900 outline-none"
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={isVisible ? `Hide ${label}` : `Show ${label}`}
+        className="flex h-11 w-11 shrink-0 items-center justify-center text-slate-500 transition hover:text-[#ff6b1a]"
+      >
+        {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  </label>
+);
+
 const PreferenceRow = ({ title, description, enabled }) => (
   <div className="flex items-center justify-between gap-4 border-b border-slate-100 py-4 last:border-b-0">
     <div>
@@ -83,8 +115,20 @@ const Profile = () => {
     profilePicture: "",
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [visiblePasswords, setVisiblePasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -160,6 +204,21 @@ const Profile = () => {
     }));
   };
 
+  const handlePasswordChange = (event) => {
+    const { name, value } = event.target;
+    setPasswordData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setVisiblePasswords((current) => ({
+      ...current,
+      [field]: !current[field],
+    }));
+  };
+
   const openEditor = () => {
     syncFormData(user);
     setSuccessMessage("");
@@ -211,6 +270,68 @@ const Profile = () => {
       setError("Could not update your profile. Please try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const cancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setVisiblePasswords({
+      currentPassword: false,
+      newPassword: false,
+      confirmPassword: false,
+    });
+    setError("");
+  };
+
+  const savePassword = async (event) => {
+    event.preventDefault();
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError("New password and confirmation do not match.");
+      setSuccessMessage("");
+      return;
+    }
+
+    setIsSavingPassword(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await axios.put(
+        `${backendUrl}/api/user/profile/password`,
+        {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        cancelPasswordChange();
+        setSuccessMessage("Password updated successfully.");
+      } else {
+        setError(response.data.message || "Could not update your password.");
+      }
+    } catch (passwordError) {
+      console.log(passwordError);
+      setError("Could not update your password. Please try again.");
+    } finally {
+      setIsSavingPassword(false);
     }
   };
 
@@ -412,15 +533,70 @@ const Profile = () => {
             </div>
 
             <div className="divide-y divide-slate-100">
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-4 py-4 text-sm">
-                <span className="font-bold text-slate-800">Password</span>
-                <span className="font-black tracking-[0.18em] text-slate-950">
-                  ********
-                </span>
-                <button className="font-black text-[#ff6b1a]" type="button">
-                  Change
-                </button>
-              </div>
+              {isChangingPassword ? (
+                <form onSubmit={savePassword} className="space-y-4 py-4">
+                  <PasswordField
+                    label="Current Password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    isVisible={visiblePasswords.currentPassword}
+                    onToggle={() => togglePasswordVisibility("currentPassword")}
+                  />
+                  <PasswordField
+                    label="New Password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    isVisible={visiblePasswords.newPassword}
+                    onToggle={() => togglePasswordVisibility("newPassword")}
+                  />
+                  <PasswordField
+                    label="Confirm New Password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    isVisible={visiblePasswords.confirmPassword}
+                    onToggle={() => togglePasswordVisibility("confirmPassword")}
+                  />
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <button
+                      type="submit"
+                      disabled={isSavingPassword}
+                      className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#ff8b3d] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#f97316] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isSavingPassword ? "Saving..." : "Save Password"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelPasswordChange}
+                      disabled={isSavingPassword}
+                      className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="grid grid-cols-[150px_1fr_auto] items-center gap-4 py-4 text-sm">
+                  <span className="font-bold text-slate-800">Password</span>
+                  <span className="font-black tracking-[0.18em] text-slate-950">
+                    ********
+                  </span>
+                  <button
+                    className="font-black text-[#ff6b1a]"
+                    type="button"
+                    onClick={() => {
+                      setIsChangingPassword(true);
+                      setError("");
+                      setSuccessMessage("");
+                    }}
+                  >
+                    Change
+                  </button>
+                </div>
+              )}
               <div className="grid grid-cols-[150px_1fr_auto] items-center gap-4 py-4 text-sm">
                 <span className="font-bold text-slate-800">Two-Factor Auth</span>
                 <span className="font-black text-emerald-700">Enabled</span>

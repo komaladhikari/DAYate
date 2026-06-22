@@ -14,6 +14,10 @@ export const findUserById = (id) => {
   return userModel.findById(id).select("-password");
 };
 
+export const findUserWithPasswordById = (id) => {
+  return userModel.findById(id);
+};
+
 export const createUser = (userData) => {
   return new userModel(userData).save();
 };
