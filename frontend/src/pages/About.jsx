@@ -10,7 +10,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import image4 from "../assets/image4.jpg";
-import image5 from "../assets/image5.jpg";
 
 const reasons = [
   { icon: Heart, text: "One place for planning dates" },
@@ -179,26 +178,6 @@ const About = () => {
                 <p className="mt-3 leading-7 text-slate-700">{text}</p>
               </article>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative mx-4 mb-16 overflow-hidden rounded-[24px] sm:mx-6 lg:mx-8 lg:mb-24">
-        <img
-          src={image5}
-          alt="Couple sitting together on a beach at sunset"
-          className="h-[480px] w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-slate-950/35" />
-        <div className="absolute inset-0 flex items-center justify-center p-5">
-          <div className="max-w-3xl rounded-[24px] border border-white/30 bg-white/20 p-7 text-center text-white shadow-2xl backdrop-blur-md sm:p-10">
-            <p className="text-2xl font-semibold italic leading-10 sm:text-4xl">
-              "Because sometimes the most important thing you can say is:
-              <span className="block pt-3 font-black">
-                I was thinking about you.
-              </span>
-              "
-            </p>
           </div>
         </div>
       </section>
