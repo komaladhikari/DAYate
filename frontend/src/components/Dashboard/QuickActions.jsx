@@ -66,7 +66,7 @@ const QuickActions = () => {
           Discover date ideas for any mood.
         </p>
         <Link
-          to="/activities"
+          to="/explore-ideas"
           className="mt-4 inline-flex rounded-full bg-slate-950 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950"
         >
           Explore Ideas

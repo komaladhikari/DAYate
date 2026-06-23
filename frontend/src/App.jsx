@@ -13,6 +13,7 @@ import SharePlan from './pages/SharePlan'
 import Chat from './pages/Chat'
 import Dashboard from './pages/Dashboard'
 import DateCalendar from './pages/DateCalendar'
+import ExploreIdeas from './pages/ExploreIdeas'
 //import placeOrder from './pages/placeOrder'
 import Contact from './pages/Contact'
 import MyPlans from "./pages/MyPlans";
@@ -36,6 +37,7 @@ const App = () => {
           <Route path="/share" element={<ProtectedRoute><SharePlan /></ProtectedRoute>} />
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/date-calendar" element={<ProtectedRoute><DateCalendar /></ProtectedRoute>} />
+          <Route path="/explore-ideas" element={<ProtectedRoute><ExploreIdeas /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
