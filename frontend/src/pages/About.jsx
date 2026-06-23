@@ -63,30 +63,27 @@ const features = [
 const About = () => {
   return (
     <main className="overflow-hidden bg-[#F8C29B] text-slate-950">
-      <section className="relative flex min-h-[calc(100vh-76px)] items-center justify-center px-4 text-center text-white">
+      <section className="relative flex min-h-[calc(100vh-76px)] items-center justify-center px-4 text-center text-slate-950">
         <img
           src={image4}
           alt="Couple walking together through an open field"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-slate-950/55" />
+        <div className="absolute inset-0 bg-[#F8C29B]/55" />
+        <div className="absolute inset-0 bg-white/20" />
 
         <div className="relative mx-auto max-w-4xl animate-[fadeIn_900ms_ease-out]">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-2 text-sm font-bold uppercase tracking-[0.25em] backdrop-blur">
-            <Sparkles size={17} />
-            DAYate Story
-          </p>
           <h1 className="text-5xl font-black leading-tight sm:text-6xl lg:text-7xl">
             PLAN LESS.
             <br />
             LOVE MORE.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/90 sm:text-2xl">
+          <p className="mx-auto mt-6 max-w-2xl text-lg font-semibold leading-8 text-slate-800 sm:text-2xl">
             Creating meaningful moments should not feel complicated.
           </p>
           <Link
             to="/explore-ideas"
-            className="mt-8 inline-flex rounded-full bg-[#09122C] px-7 py-3 text-sm font-black text-white shadow-xl shadow-slate-950/20 transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="mt-8 inline-flex rounded-full bg-[#09122C] px-7 py-3 text-sm font-black text-white shadow-xl shadow-slate-950/20 transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#09122C]"
           >
             Explore Ideas
           </Link>
@@ -198,26 +195,38 @@ const About = () => {
             </p>
           </div>
 
-          <div className="rounded-[24px] bg-[#FFF7EF] p-6 shadow-xl shadow-orange-900/10">
-            <div className="rounded-[22px] bg-linear-to-br from-[#E88F5A] to-[#09122C] p-8 text-white">
-              <Sparkles size={36} />
-              <p className="mt-8 text-3xl font-black leading-tight">
-                A date is not just a reservation. It is a little proof that
-                someone was paying attention.
+          <div className="relative flex justify-center overflow-hidden px-2 py-8 sm:px-8">
+            <span
+              aria-hidden="true"
+              className="absolute right-8 top-0 text-8xl font-black leading-none text-[#E88F5A]/15"
+            >
+              "
+            </span>
+            <div className="relative max-w-md">
+              <Sparkles className="text-[#D56B3D]" size={30} />
+              <p className="mt-5 text-3xl font-black leading-tight text-[#09122C] sm:text-4xl">
+                A date is not just a reservation.
               </p>
+              <p className="mt-4 text-lg font-semibold leading-8 text-slate-800 sm:text-xl">
+                It is a little proof that someone was paying attention.
+              </p>
+              <div className="mt-6 h-1.5 w-24 rounded-full bg-[#E88F5A]" />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[24px] bg-linear-to-r from-[#E88F5A] to-[#09122C] px-6 py-14 text-center text-white shadow-2xl shadow-orange-900/20">
-          <h2 className="text-4xl font-black sm:text-5xl">
+      <section className="px-4 pb-20 text-center sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl border-t border-[#D56B3D]/30 pt-14">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-[#D56B3D]">
+            Start small. Make it thoughtful.
+          </p>
+          <h2 className="mx-auto mt-4 max-w-4xl text-4xl font-black leading-tight text-[#09122C] sm:text-6xl">
             Ready to create something memorable?
           </h2>
           <Link
             to="/dashboard"
-            className="mt-8 inline-flex rounded-full bg-white px-7 py-3 text-sm font-black text-[#09122C] transition hover:-translate-y-0.5 hover:bg-[#FFF7EF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="mt-8 inline-flex rounded-full bg-[#09122C] px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-orange-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#09122C]"
           >
             Start Planning
           </Link>
