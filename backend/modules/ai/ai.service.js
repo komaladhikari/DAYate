@@ -1,5 +1,12 @@
 import OpenAI from "openai";
 
+class AiServiceError extends Error {
+  constructor(message, statusCode = 502) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
 const normalizeText = (value) =>
   typeof value === "string" ? value.trim() : "";
 
@@ -18,7 +25,7 @@ const generateDateIdeas = async ({ mood, budget, location, interests }) => {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error("OpenAI API key is not configured");
+    throw new AiServiceError("AI ideas are not configured yet.", 500);
   }
 
   const client = new OpenAI({ apiKey });
@@ -57,10 +64,25 @@ const generateDateIdeas = async ({ mood, budget, location, interests }) => {
     return { ideas: normalizeIdeas(parsed.ideas) };
   } catch (error) {
     if (error instanceof SyntaxError) {
-      throw new Error("OpenAI returned invalid JSON");
+      throw new AiServiceError("AI returned an unexpected response.", 502);
     }
 
-    throw new Error(error.message || "Could not generate date ideas");
+    if (error instanceof AiServiceError) {
+      throw error;
+    }
+
+    if (error.status === 401) {
+      throw new AiServiceError("AI ideas are not configured correctly.", 500);
+    }
+
+    if (error.status === 429) {
+      throw new AiServiceError(
+        "AI ideas are temporarily unavailable because the OpenAI account has reached its quota.",
+        503
+      );
+    }
+
+    throw new AiServiceError("Could not generate date ideas right now.", 502);
   }
 };
 

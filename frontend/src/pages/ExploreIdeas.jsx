@@ -9,6 +9,14 @@ const initialForm = {
   interests: "",
 };
 
+const getErrorHint = (message) => {
+  if (message.toLowerCase().includes("quota")) {
+    return "Please try again after the OpenAI billing or quota issue is resolved.";
+  }
+
+  return "Check your inputs and try again in a moment.";
+};
+
 const ExploreIdeas = () => {
   const [form, setForm] = useState(initialForm);
   const [ideas, setIdeas] = useState([]);
@@ -149,7 +157,7 @@ const ExploreIdeas = () => {
           >
             <p className="font-semibold text-rose-900">{error}</p>
             <p className="mt-1 text-sm text-rose-700">
-              Check your inputs and try again in a moment.
+              {getErrorHint(error)}
             </p>
           </div>
         )}

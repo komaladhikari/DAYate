@@ -24,9 +24,7 @@ const createDateIdeas = async (req, res) => {
 
     res.json({ success: true, data: ideas });
   } catch (error) {
-    const status = error.message.includes("API key") ? 500 : 502;
-
-    res.status(status).json({
+    res.status(error.statusCode || 502).json({
       success: false,
       message: error.message || "Could not generate date ideas",
     });
