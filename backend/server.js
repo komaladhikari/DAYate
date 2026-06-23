@@ -10,6 +10,7 @@ import { calendarRouter } from "./modules/calendar/index.js";
 import { shareRouter } from "./modules/share/index.js";
 import { restaurantRouter } from "./modules/restaurants/index.js";
 import { giftRouter } from "./modules/gifts/index.js";
+import { aiRouter } from "./modules/ai/index.js";
 
 
 //app configuration
@@ -61,6 +62,7 @@ app.use("/api/chat/calendar", calendarRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/restaurants", restaurantRouter);
 app.use("/api/gifts", giftRouter);
+app.use("/api/ai", aiRouter);
 
 
 app.get('/',(req,res)=>{
