@@ -38,10 +38,11 @@ import logo from "../assets/image2.png";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
   const isLoggedIn = Boolean(localStorage.getItem("token"));
   const role = localStorage.getItem("role") || "user";
+  const isBusinessWorkspace = location.pathname.startsWith("/business/dashboard");
   const dashboardPath =
     role === "admin"
       ? "/admin/dashboard"
@@ -62,6 +63,10 @@ const Navbar = () => {
     localStorage.removeItem("accountName");
     navigate("/", { replace: true });
   };
+
+  if (isBusinessWorkspace) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-[#ff9847]">
