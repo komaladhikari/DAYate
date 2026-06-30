@@ -41,6 +41,13 @@ const Navbar = () => {
   useLocation();
   const navigate = useNavigate();
   const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const role = localStorage.getItem("role") || "user";
+  const dashboardPath =
+    role === "admin"
+      ? "/admin/dashboard"
+      : role === "business"
+        ? "/business/dashboard"
+        : "/dashboard";
 
   const linkClass = ({ isActive }) =>
     `text-sm font-medium transition ${
@@ -51,6 +58,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("accountName");
     navigate("/", { replace: true });
   };
 
@@ -59,7 +68,7 @@ const Navbar = () => {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         
         {/* Logo */}
-        <NavLink to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-3">
+        <NavLink to={isLoggedIn ? dashboardPath : "/"} className="flex items-center gap-3">
           <img
             src={logo}
             className="block h-16 w-auto object-contain"
@@ -83,13 +92,15 @@ const Navbar = () => {
 
           {isLoggedIn ? (
             <>
-              <NavLink to="/dashboard" className={linkClass}>
+              <NavLink to={dashboardPath} className={linkClass}>
                 Dashboard
               </NavLink>
 
-              <NavLink to="/profile" className={linkClass}>
-                Profile
-              </NavLink>
+              {role === "user" && (
+                <NavLink to="/profile" className={linkClass}>
+                  Profile
+                </NavLink>
+              )}
 
               <button
                 type="button"

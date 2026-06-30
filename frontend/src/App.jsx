@@ -12,6 +12,8 @@ import BookRides from './pages/BookRides'
 import SharePlan from './pages/SharePlan'
 import Chat from './pages/Chat'
 import Dashboard from './pages/Dashboard'
+import AdminDashboard from './pages/AdminDashboard'
+import BusinessDashboard from './pages/BusinessDashboard'
 import DateCalendar from './pages/DateCalendar'
 import ExploreIdeas from './pages/ExploreIdeas'
 //import placeOrder from './pages/placeOrder'
@@ -30,24 +32,43 @@ const App = () => {
       <main className="w-full">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/activities" element={<ProtectedRoute><Activites /></ProtectedRoute>} />
-          <Route path="/cafes" element={<ProtectedRoute><Cafes /></ProtectedRoute>} />
-          <Route path="/gifts" element={<ProtectedRoute><Gifts /></ProtectedRoute>} />
-          <Route path="/book-rides" element={<ProtectedRoute><BookRides /></ProtectedRoute>} />
-          <Route path="/share" element={<ProtectedRoute><SharePlan /></ProtectedRoute>} />
-          <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/date-calendar" element={<ProtectedRoute><DateCalendar /></ProtectedRoute>} />
-          <Route path="/explore-ideas" element={<ProtectedRoute><ExploreIdeas /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/activities" element={<ProtectedRoute allowedRoles={["user"]}><Activites /></ProtectedRoute>} />
+          <Route path="/cafes" element={<ProtectedRoute allowedRoles={["user"]}><Cafes /></ProtectedRoute>} />
+          <Route path="/gifts" element={<ProtectedRoute allowedRoles={["user"]}><Gifts /></ProtectedRoute>} />
+          <Route path="/book-rides" element={<ProtectedRoute allowedRoles={["user"]}><BookRides /></ProtectedRoute>} />
+          <Route path="/share" element={<ProtectedRoute allowedRoles={["user"]}><SharePlan /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute allowedRoles={["user"]}><Chat /></ProtectedRoute>} />
+          <Route path="/date-calendar" element={<ProtectedRoute allowedRoles={["user"]}><DateCalendar /></ProtectedRoute>} />
+          <Route path="/explore-ideas" element={<ProtectedRoute allowedRoles={["user"]}><ExploreIdeas /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["user"]}><Dashboard /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/login" element={<Login accountType="admin" />} />
+          <Route path="/business/login" element={<Login accountType="business" />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/business/register" element={<Register accountType="business" />} />
           <Route path="/about" element={<About />} />
           {/* <Route path = '/placeOrder' element = {<placeOrder/>}/> */}
           <Route path="/contact" element={<Contact />} />
-          <Route path="/my-plans" element={<ProtectedRoute><MyPlans /></ProtectedRoute>} />
-          <Route path="/cafes/:id" element={<ProtectedRoute><CafeReservation /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/planned-dates" element={<ProtectedRoute><SharePlan /></ProtectedRoute>} />
+          <Route path="/my-plans" element={<ProtectedRoute allowedRoles={["user"]}><MyPlans /></ProtectedRoute>} />
+          <Route path="/cafes/:id" element={<ProtectedRoute allowedRoles={["user"]}><CafeReservation /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute allowedRoles={["user"]}><Profile /></ProtectedRoute>} />
+          <Route path="/planned-dates" element={<ProtectedRoute allowedRoles={["user"]}><SharePlan /></ProtectedRoute>} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/business/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["business"]}>
+                <BusinessDashboard />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
     </div>

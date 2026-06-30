@@ -1,8 +1,52 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Lock } from "lucide-react";
+import { BriefcaseBusiness, Mail, Lock, ShieldCheck } from "lucide-react";
 
-const Login = () => {
+const loginConfig = {
+  user: {
+    title: "Login",
+    subtitle: "Welcome back. Sign in to continue planning.",
+    endpoint: "/api/user/login",
+    icon: Lock,
+    registerPath: "/register",
+    registerText: "Don't have an account? Sign up",
+    fallbackPath: "/dashboard",
+  },
+  business: {
+    title: "Business Login",
+    subtitle: "Manage your restaurant or cafe presence on DAYate.",
+    endpoint: "/api/user/business/login",
+    icon: BriefcaseBusiness,
+    registerPath: "/business/register",
+    registerText: "Register your restaurant or cafe",
+    fallbackPath: "/business/dashboard",
+  },
+  admin: {
+    title: "Admin Login",
+    subtitle: "Sign in with the single DAYate admin account.",
+    endpoint: "/api/user/admin",
+    icon: ShieldCheck,
+    fallbackPath: "/admin/dashboard",
+  },
+};
+
+const storeSession = ({ token, user }) => {
+  if (token) {
+    localStorage.setItem("token", token);
+  }
+
+  if (user?.role) {
+    localStorage.setItem("role", user.role);
+  }
+
+  if (user?.name) {
+    localStorage.setItem("accountName", user.name);
+  }
+};
+
+const Login = ({ accountType = "user" }) => {
+  const config = loginConfig[accountType] || loginConfig.user;
+  const Icon = config.icon;
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -20,7 +64,7 @@ const Login = () => {
 
     try {
       const API = import.meta.env.VITE_API_URL || 'https://dayate-zw7n.onrender.com'
-      const res = await fetch(`${API}/api/user/login`, {
+      const res = await fetch(`${API}${config.endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,12 +81,9 @@ const Login = () => {
         return;
       }
 
-      // on success: store token (if provided) and navigate
-      if (data.token) {
-        localStorage.setItem('token', data.token)
-      }
+      storeSession(data);
       alert('Login successful')
-      navigate(location.state?.from || '/dashboard', { replace: true })
+      navigate(location.state?.from || config.fallbackPath, { replace: true })
     } catch (error) {
       console.error(error);   
       alert("Could not connect to backend");
@@ -57,15 +98,15 @@ const Login = () => {
           className="w-full max-w-[520px] rounded-[34px] border border-white/70 bg-white/90 px-10 py-12 shadow-[0_25px_70px_rgba(15,23,42,0.14)] backdrop-blur"
         >
           <div className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-orange-500">
-            <Lock size={34} strokeWidth={2} />
+            <Icon size={34} strokeWidth={2} />
           </div>
 
           <h1 className="text-center text-4xl font-black tracking-tight text-slate-950">
-            Login
+            {config.title}
           </h1>
 
           <p className="mt-4 text-center text-lg font-medium text-slate-500">
-            Welcome back. Sign in to continue planning.
+            {config.subtitle}
           </p>
 
           <div className="mt-10 space-y-6">
@@ -103,15 +144,28 @@ const Login = () => {
             Login
           </button>
 
-          <div className="mt-7 text-center">
-            <Link
-              to="/register"
-              state={{ from: location.state?.from }}
-              className="text-sm font-semibold text-slate-500 underline underline-offset-4 hover:text-orange-500"
-            >
-              Don&apos;t have an account? Sign up
-            </Link>
-          </div>
+          {config.registerPath && (
+            <div className="mt-7 text-center">
+              <Link
+                to={config.registerPath}
+                state={{ from: location.state?.from }}
+                className="text-sm font-semibold text-slate-500 underline underline-offset-4 hover:text-orange-500"
+              >
+                {config.registerText}
+              </Link>
+            </div>
+          )}
+
+          {accountType === "user" && (
+            <div className="mt-5 flex flex-wrap justify-center gap-4 text-sm font-semibold text-slate-500">
+              <Link to="/business/login" className="hover:text-orange-500">
+                Business login
+              </Link>
+              <Link to="/admin/login" className="hover:text-orange-500">
+                Admin login
+              </Link>
+            </div>
+          )}
         </form>
       </div>
     </section>
