@@ -61,6 +61,7 @@ const Navbar = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("accountName");
+    localStorage.removeItem("businessName");
     navigate("/", { replace: true });
   };
 

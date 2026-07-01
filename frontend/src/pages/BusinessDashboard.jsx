@@ -1,3 +1,5 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   BarChart3,
@@ -9,7 +11,12 @@ import {
   Heart,
   Home,
   Info,
+  LogOut,
+  Mail,
+  MapPin,
   Megaphone,
+  Phone,
+  RefreshCw,
   Settings,
   Star,
   Store,
@@ -21,6 +28,7 @@ import logo from "../assets/image2.png";
 import dinnerImage from "../assets/image3.jpg";
 import patioImage from "../assets/image6.jpg";
 import dessertImage from "../assets/image5.jpg";
+import { getBusinessDashboard } from "../services/businessDashboardService";
 
 const navItems = [
   { label: "Overview", icon: Home, active: true },
@@ -34,71 +42,34 @@ const navItems = [
   { label: "Settings", icon: Settings },
 ];
 
-const metrics = [
-  {
-    title: "Total Date Selections",
-    value: "128",
-    detail: "+18% from last week",
-    icon: Heart,
-    iconClass: "bg-orange-100 text-orange-500",
-    detailClass: "text-emerald-600",
-  },
-  {
-    title: "Upcoming Reservations",
-    value: "24",
-    detail: "Today: 8",
-    icon: CalendarDays,
-    iconClass: "bg-orange-100 text-orange-500",
-    detailClass: "text-orange-500",
-  },
-  {
-    title: "Total Revenue (Est.)",
-    value: "$1,842",
-    detail: "+12% from last week",
-    icon: DollarSign,
-    iconClass: "bg-emerald-100 text-emerald-600",
-    detailClass: "text-emerald-600",
-  },
-  {
-    title: "Repeat Customers",
-    value: "36",
-    detail: "+9% from last week",
-    icon: Users,
-    iconClass: "bg-violet-100 text-violet-600",
-    detailClass: "text-emerald-600",
-  },
-];
+const popularImages = [dinnerImage, patioImage, dessertImage];
 
-const reservations = [
-  { names: "Sarah & James", date: "May 14, 2025", time: "7:00 PM", people: "2 people", status: "Confirmed" },
-  { names: "Olivia & Liam", date: "May 14, 2025", time: "8:30 PM", people: "2 people", status: "Confirmed" },
-  { names: "Emma & Noah", date: "May 15, 2025", time: "6:30 PM", people: "2 people", status: "Pending" },
-  { names: "Ava & William", date: "May 15, 2025", time: "9:00 PM", people: "2 people", status: "Confirmed" },
-];
+const formatDate = (value) =>
+  value
+    ? new Date(value).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "Date TBD";
 
-const popularItems = [
-  { title: "Romantic Dinner", count: "48 selections", image: dinnerImage },
-  { title: "Cozy Outdoor Seating", count: "35 selections", image: patioImage },
-  { title: "Dessert & Coffee", count: "28 selections", image: dessertImage },
-];
+const formatTime = (value) =>
+  value
+    ? new Date(value).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "Time TBD";
 
-const chartPoints = [
-  [0, 120],
-  [120, 72],
-  [240, 96],
-  [360, 48],
-  [480, 56],
-  [600, 128],
-  [720, 152],
-];
+const formatCurrency = (value = 0) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
 
-const linePath = chartPoints.map(([x, y], index) => `${index === 0 ? "M" : "L"} ${x} ${y}`).join(" ");
-const areaPath = `${linePath} L 720 190 L 0 190 Z`;
-
-const BusinessDashboard = () => {
-  const name = localStorage.getItem("accountName") || "The Cozy Cafe";
-
-  const avatarText = name
+const getInitials = (value = "") =>
+  value
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
@@ -106,12 +77,178 @@ const BusinessDashboard = () => {
     .join("")
     .toUpperCase();
 
+const normalizeStatus = (value = "pending") =>
+  value.charAt(0).toUpperCase() + value.slice(1).replace("_", " ");
+
+const buildChartPaths = (chart = []) => {
+  const safeChart = chart.length > 0 ? chart : Array.from({ length: 7 }, () => ({ count: 0 }));
+  const maxCount = Math.max(...safeChart.map((point) => point.count), 1);
+  const step = 720 / Math.max(safeChart.length - 1, 1);
+  const points = safeChart.map((point, index) => [
+    Number((index * step).toFixed(2)),
+    Number((180 - (point.count / maxCount) * 140).toFixed(2)),
+  ]);
+  const linePath = points
+    .map(([x, y], index) => `${index === 0 ? "M" : "L"} ${x} ${y}`)
+    .join(" ");
+
+  return {
+    points,
+    linePath,
+    areaPath: `${linePath} L 720 190 L 0 190 Z`,
+  };
+};
+
+const BusinessDashboard = () => {
+  const navigate = useNavigate();
+  const fallbackName =
+    localStorage.getItem("businessName") ||
+    localStorage.getItem("accountName") ||
+    "Your Business";
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadDashboard = useCallback(({ signal, showRefreshing = false } = {}) => {
+    if (showRefreshing) {
+      setRefreshing(true);
+    }
+
+    return getBusinessDashboard({ signal })
+      .then((data) => {
+        setDashboard(data);
+        setError("");
+
+        if (data.business?.name) {
+          localStorage.setItem("businessName", data.business.name);
+        }
+      })
+      .catch((requestError) => {
+        if (requestError.name !== "AbortError") {
+          setError(requestError.message || "Could not load business dashboard.");
+        }
+      })
+      .finally(() => {
+        if (!signal?.aborted) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      });
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    getBusinessDashboard({ signal: controller.signal })
+      .then((data) => {
+        setDashboard(data);
+        setError("");
+
+        if (data.business?.name) {
+          localStorage.setItem("businessName", data.business.name);
+        }
+      })
+      .catch((requestError) => {
+        if (requestError.name !== "AbortError") {
+          setError(requestError.message || "Could not load business dashboard.");
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const handleRefresh = () => {
+    loadDashboard({ showRefreshing: true });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("accountName");
+    localStorage.removeItem("businessName");
+    navigate("/", { replace: true });
+  };
+
+  const name = dashboard?.business?.name || fallbackName;
+  const business = dashboard?.business || {};
+  const metricsData = dashboard?.metrics || {};
+  const reservations = dashboard?.upcomingReservations || [];
+  const chart = useMemo(() => dashboard?.chart || [], [dashboard?.chart]);
+  const dateRange = chart.length > 0
+    ? `${chart[0].label} - ${chart[chart.length - 1].label}`
+    : "This week";
+  const popularItems = (dashboard?.popularItems || []).map((item, index) => ({
+    ...item,
+    image: popularImages[index % popularImages.length],
+  }));
+  const chartPaths = useMemo(() => buildChartPaths(chart), [chart]);
+  const generatedAt = dashboard?.generatedAt
+    ? new Date(dashboard.generatedAt).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "";
+
+  const metrics = [
+    {
+      title: "Total Date Selections",
+      value: loading ? "..." : String(metricsData.totalSelections || 0),
+      detail: loading
+        ? "Loading selections"
+        : `${metricsData.selectionGrowth > 0 ? "+" : ""}${metricsData.selectionGrowth || 0}% from last week`,
+      icon: Heart,
+      iconClass: "bg-orange-100 text-orange-500",
+      detailClass: Number(metricsData.selectionGrowth || 0) >= 0 ? "text-emerald-600" : "text-red-500",
+    },
+    {
+      title: "Upcoming Reservations",
+      value: loading ? "..." : String(metricsData.upcomingReservations || 0),
+      detail: loading ? "Loading reservations" : `${metricsData.selectionsThisWeek || 0} this week`,
+      icon: CalendarDays,
+      iconClass: "bg-orange-100 text-orange-500",
+      detailClass: "text-orange-500",
+    },
+    {
+      title: "Total Revenue (Est.)",
+      value: loading ? "..." : formatCurrency(metricsData.estimatedRevenue || 0),
+      detail: "Based on this week's selections",
+      icon: DollarSign,
+      iconClass: "bg-emerald-100 text-emerald-600",
+      detailClass: "text-emerald-600",
+    },
+    {
+      title: "Repeat Customers",
+      value: loading ? "..." : String(metricsData.repeatCustomers || 0),
+      detail: "Customers with 2+ selections",
+      icon: Users,
+      iconClass: "bg-violet-100 text-violet-600",
+      detailClass: "text-emerald-600",
+    },
+  ];
+
+  const avatarText = getInitials(name);
+
   return (
     <section className="min-h-screen bg-[#fff8f2] text-slate-950">
       <header className="sticky top-0 z-30 border-b border-orange-200 bg-[#ff9847]">
         <div className="flex min-h-20 items-center justify-between gap-4 px-4 sm:px-8">
           <img src={logo} alt="DAYate" className="h-14 w-auto object-contain" />
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              aria-label="Refresh dashboard"
+              className="hidden h-11 w-11 items-center justify-center rounded-full text-slate-950 transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60 sm:flex"
+            >
+              <RefreshCw size={22} className={refreshing ? "animate-spin" : ""} />
+            </button>
             <button
               type="button"
               aria-label="Notifications"
@@ -131,6 +268,14 @@ const BusinessDashboard = () => {
                 <span className="block text-sm font-semibold text-slate-800">Business Account</span>
               </span>
               <ChevronDown size={20} className="hidden sm:block" />
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-black text-white shadow-lg shadow-slate-900/15 transition hover:bg-slate-800"
+            >
+              <LogOut size={18} />
+              <span className="hidden sm:inline">Log out</span>
             </button>
           </div>
         </div>
@@ -165,6 +310,30 @@ const BusinessDashboard = () => {
             </span>
             <ArrowRight size={20} />
           </button>
+
+          <div className="mt-5 hidden rounded-lg border border-orange-100 bg-white p-5 shadow-sm lg:block">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-orange-500">
+              Live Account
+            </p>
+            <div className="mt-4 space-y-3 text-sm font-semibold text-slate-600">
+              <p className="flex items-start gap-2">
+                <Store size={17} className="mt-0.5 shrink-0 text-slate-400" />
+                <span>{business.type || "restaurant/cafe"}</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <Mail size={17} className="mt-0.5 shrink-0 text-slate-400" />
+                <span className="break-all">{business.email || "No email on file"}</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <Phone size={17} className="mt-0.5 shrink-0 text-slate-400" />
+                <span>{business.phone || "No phone added"}</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <MapPin size={17} className="mt-0.5 shrink-0 text-slate-400" />
+                <span>{business.address || "No address added"}</span>
+              </p>
+            </div>
+          </div>
         </aside>
 
         <main className="px-4 py-8 sm:px-8 lg:px-10">
@@ -175,18 +344,43 @@ const BusinessDashboard = () => {
                   Welcome back, {name}! <span aria-hidden="true">👋</span>
                 </h1>
                 <p className="mt-2 text-lg font-semibold text-slate-500">
-                  Here's what's happening with your business today.
+                  Pulled from customer date plans that selected this business.
                 </p>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.08em] text-slate-500">
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">
+                    Connected to live plans
+                  </span>
+                  <span>
+                    {generatedAt ? `Last updated ${generatedAt}` : "Loading latest data"}
+                  </span>
+                </div>
               </div>
-              <button
-                type="button"
-                className="flex h-14 w-full items-center justify-center gap-3 rounded-lg border border-orange-100 bg-white px-5 text-sm font-black text-slate-800 shadow-sm md:w-auto"
-              >
-                <CalendarDays size={20} />
-                May 14 - May 20, 2025
-                <ChevronDown size={18} />
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row md:items-center">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-lg border border-orange-100 bg-white px-5 text-sm font-black text-slate-800 shadow-sm transition hover:border-orange-200 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
+                >
+                  <RefreshCw size={20} className={refreshing ? "animate-spin" : ""} />
+                  {refreshing ? "Refreshing" : "Refresh"}
+                </button>
+                <button
+                  type="button"
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-lg border border-orange-100 bg-white px-5 text-sm font-black text-slate-800 shadow-sm md:w-auto"
+                >
+                  <CalendarDays size={20} />
+                  {dateRange}
+                  <ChevronDown size={18} />
+                </button>
+              </div>
             </div>
+
+            {error && (
+              <div className="mt-6 rounded-lg border border-red-100 bg-red-50 px-5 py-4 text-sm font-bold text-red-700">
+                {error}
+              </div>
+            )}
 
             <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {metrics.map(({ title, value, detail, icon: Icon, iconClass, detailClass }) => (
@@ -218,19 +412,34 @@ const BusinessDashboard = () => {
                 </div>
 
                 <div className="mt-6 divide-y divide-orange-100">
-                  {reservations.map((reservation, index) => (
-                    <div key={`${reservation.names}-${reservation.time}`} className="grid gap-3 py-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
+                  {loading && (
+                    <div className="py-8 text-sm font-bold text-slate-500">
+                      Loading reservations for {name}...
+                    </div>
+                  )}
+
+                  {!loading && reservations.length === 0 && (
+                    <div className="py-8 text-sm font-bold text-slate-500">
+                      No customer plans have selected this business yet.
+                    </div>
+                  )}
+
+                  {!loading && reservations.map((reservation) => (
+                    <div key={reservation.id} className="grid gap-3 py-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-xl font-black">
-                          {index % 2 === 0 ? "S" : "O"}
+                          {getInitials(reservation.names) || "D"}
                         </div>
-                        <p className="font-black">{reservation.names}</p>
+                        <div>
+                          <p className="font-black">{reservation.names}</p>
+                          <p className="text-xs font-semibold text-slate-500">{reservation.planName}</p>
+                        </div>
                       </div>
                       <p className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                         <CalendarDays size={16} />
-                        {reservation.date}
+                        {formatDate(reservation.date)}
                         <span>•</span>
-                        {reservation.time}
+                        {formatTime(reservation.time)}
                       </p>
                       <p className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                         <Users size={16} />
@@ -238,12 +447,12 @@ const BusinessDashboard = () => {
                       </p>
                       <span
                         className={`inline-flex h-8 min-w-24 items-center justify-center rounded-full px-3 text-sm font-black ${
-                          reservation.status === "Confirmed"
+                          reservation.status === "confirmed" || reservation.status === "planned"
                             ? "bg-emerald-50 text-emerald-600"
                             : "bg-orange-50 text-orange-500"
                         }`}
                       >
-                        {reservation.status}
+                        {normalizeStatus(reservation.status)}
                       </span>
                     </div>
                   ))}
@@ -280,14 +489,19 @@ const BusinessDashboard = () => {
                     {[0, 120, 240, 360, 480, 600, 720].map((x) => (
                       <line key={x} x1={x} x2={x} y1="0" y2="192" stroke="#f3eee9" strokeWidth="1" />
                     ))}
-                    <path d={areaPath} fill="url(#businessChartFill)" />
-                    <path d={linePath} fill="none" stroke="#ff6b1a" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
-                    {chartPoints.map(([x, y]) => (
+                    <path d={chartPaths.areaPath} fill="url(#businessChartFill)" />
+                    <path d={chartPaths.linePath} fill="none" stroke="#ff6b1a" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
+                    {chartPaths.points.map(([x, y]) => (
                       <circle key={`${x}-${y}`} cx={x} cy={y} r="8" fill="#ff6b1a" stroke="#fff7ed" strokeWidth="4" />
                     ))}
-                    {["May 14", "May 15", "May 16", "May 17", "May 18", "May 19", "May 20"].map((label, index) => (
-                      <text key={label} x={index * 120} y="222" fill="#64748b" fontSize="14" fontWeight="700" textAnchor={index === 0 ? "start" : "middle"}>
-                        {label}
+                    {(chart.length > 0 ? chart : Array.from({ length: 7 }, (_, index) => ({ label: `Day ${index + 1}` }))).map((point, index, labels) => (
+                      <text key={point.label} x={index * (720 / Math.max(labels.length - 1, 1))} y="222" fill="#64748b" fontSize="14" fontWeight="700" textAnchor={index === 0 ? "start" : "middle"}>
+                        {point.label}
+                      </text>
+                    ))}
+                    {chart.map((point, index, labels) => (
+                      <text key={`${point.label}-count`} x={index * (720 / Math.max(labels.length - 1, 1))} y="24" fill="#94a3b8" fontSize="12" fontWeight="700" textAnchor={index === 0 ? "start" : "middle"}>
+                        {point.count}
                       </text>
                     ))}
                   </svg>
@@ -295,10 +509,10 @@ const BusinessDashboard = () => {
 
                 <div className="grid overflow-hidden rounded-lg bg-orange-50 sm:grid-cols-4">
                   {[
-                    ["128", "Total Selections"],
-                    ["+18%", "vs last week"],
-                    ["62%", "Weekend Bookings"],
-                    ["3.2", "Avg. party size"],
+                    [String(metricsData.totalSelections || 0), "Total Selections"],
+                    [`${Number(metricsData.selectionGrowth || 0) > 0 ? "+" : ""}${metricsData.selectionGrowth || 0}%`, "vs last week"],
+                    [String(metricsData.selectionsThisWeek || 0), "This Week"],
+                    [String(metricsData.averagePartySize || 0), "Avg. party size"],
                   ].map(([value, label]) => (
                     <div key={label} className="border-orange-100 p-4 sm:border-l first:sm:border-l-0">
                       <p className={`text-3xl font-black ${value.startsWith("+") ? "text-emerald-600" : "text-slate-950"}`}>{value}</p>
@@ -321,12 +535,26 @@ const BusinessDashboard = () => {
                   </button>
                 </div>
                 <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  {popularItems.map((item) => (
+                  {loading && (
+                    <div className="text-sm font-bold text-slate-500 md:col-span-3">
+                      Loading popular selections...
+                    </div>
+                  )}
+
+                  {!loading && popularItems.length === 0 && (
+                    <div className="text-sm font-bold text-slate-500 md:col-span-3">
+                      Popular items will appear after customers choose this business in their plans.
+                    </div>
+                  )}
+
+                  {!loading && popularItems.map((item) => (
                     <article key={item.title} className="flex items-center gap-4">
                       <img src={item.image} alt="" className="h-16 w-16 rounded-lg object-cover" />
                       <div>
                         <h3 className="font-black">{item.title}</h3>
-                        <p className="mt-1 text-sm font-semibold text-slate-500">{item.count}</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-500">
+                          {item.count} {item.count === 1 ? "selection" : "selections"}
+                        </p>
                       </div>
                     </article>
                   ))}

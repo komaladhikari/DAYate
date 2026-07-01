@@ -42,6 +42,12 @@ const storeSession = ({ token, user }) => {
   if (user?.name) {
     localStorage.setItem("accountName", user.name);
   }
+
+  if (user?.businessName) {
+    localStorage.setItem("businessName", user.businessName);
+  } else {
+    localStorage.removeItem("businessName");
+  }
 };
 
 const Login = ({ accountType = "user" }) => {
