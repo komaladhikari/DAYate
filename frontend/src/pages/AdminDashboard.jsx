@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
@@ -7,7 +6,6 @@ import {
   ChevronDown,
   Clock3,
   Image,
-  LogOut,
   MessageCircle,
   RefreshCw,
   ShieldAlert,
@@ -72,7 +70,6 @@ const buildChartPaths = (chart = []) => {
 };
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -119,14 +116,6 @@ const AdminDashboard = () => {
 
     return () => controller.abort();
   }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("accountName");
-    localStorage.removeItem("businessName");
-    navigate("/", { replace: true });
-  };
 
   const handleReview = async (businessId, approvalStatus) => {
     setReviewingId(businessId);
@@ -190,7 +179,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <section className="min-h-screen bg-[#fff8f2] px-4 py-8 text-slate-950 sm:px-8">
+    <section className="min-h-[calc(100vh-96px)] bg-[#fff8f2] px-4 py-8 text-slate-950 sm:px-8">
       <div className="mx-auto max-w-[1700px]">
         <header className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
           <div>
@@ -224,14 +213,6 @@ const AdminDashboard = () => {
               <CalendarDays size={20} />
               {dateRange}
               <ChevronDown size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex h-14 items-center justify-center gap-3 rounded-lg bg-slate-950 px-5 text-sm font-black text-white shadow-lg shadow-slate-900/15 transition hover:bg-slate-800"
-            >
-              <LogOut size={19} />
-              Log out
             </button>
           </div>
         </header>
