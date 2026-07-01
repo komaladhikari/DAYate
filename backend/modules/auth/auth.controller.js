@@ -22,10 +22,25 @@ const loginUser = async(req,res)=>{
         if (!user){
             return res.json({success: false, message: "user does not exist"})
         }
+        if (user.role === "business") {
+            return res.json({
+                success: false,
+                message: "Please use the business login",
+            });
+        }
         const isMatch = await bcrypt.compare(password, user.password);//password saved in our database
         if (isMatch){
-            const token = createToken(user._id); //take token from createToken function and pass user id to it
-            res.json({success: true, token})
+            const token = createToken(user._id, user.role || "user"); //take token from createToken function and pass user id to it
+            res.json({
+                success: true,
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role || "user",
+                },
+            })
         }
         else {
             res.json({success: false, message: "Incorrect password"})
@@ -62,12 +77,22 @@ const registerUser = async (req,res)=>{
             const user = await createUser({
                 name,
                 email,
-                password: hashedPassword
+                password: hashedPassword,
+                role: "user",
             });
 
-            const token = createToken(user._id);
+            const token = createToken(user._id, user.role);
 
-            res.json({success: true, token})
+            res.json({
+                success: true,
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                },
+            })
     }
         catch(error){
             console.log (error);
@@ -163,13 +188,157 @@ const updateUserPassword = async (req, res) => {
   }
 };
 
+const registerBusiness = async (req, res) => {
+  try {
+    const {
+      ownerName,
+      businessName,
+      businessType,
+      email,
+      password,
+      phone,
+      address,
+    } = req.body;
+
+    if (!ownerName || !businessName || !businessType || !email || !password) {
+      return res.json({
+        success: false,
+        message: "Owner name, business name, type, email, and password are required",
+      });
+    }
+
+    if (!["restaurant", "cafe"].includes(businessType)) {
+      return res.json({
+        success: false,
+        message: "Business type must be restaurant or cafe",
+      });
+    }
+
+    const exists = await findUserByEmail(email);
+    if (exists) {
+      return res.json({ success: false, message: "Business already exists" });
+    }
+
+    if (!validator.isEmail(email)) {
+      return res.json({ success: false, message: "Please enter a valid email" });
+    }
+
+    if (password.length < 8) {
+      return res.json({ success: false, message: "Please enter strong password" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = await createUser({
+      name: ownerName,
+      email,
+      password: hashedPassword,
+      role: "business",
+      businessName,
+      businessType,
+      phone,
+      address,
+    });
+
+    const token = createToken(user._id, user.role);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        businessName: user.businessName,
+        businessType: user.businessType,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const businessLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await findUserByEmail(email);
+
+    if (!user || user.role !== "business") {
+      return res.json({ success: false, message: "Business account not found" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.json({ success: false, message: "Incorrect password" });
+    }
+
+    const token = createToken(user._id, user.role);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        businessName: user.businessName,
+        businessType: user.businessType,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "An error occurred" });
+  }
+};
+
 //route for admin login
 const adminLogin = async (req,res)=>{
+    try {
+        const { email, password } = req.body;
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (!adminEmail || !adminPassword) {
+            return res.json({
+                success: false,
+                message: "Admin login is not configured",
+            });
+        }
+
+        if (email !== adminEmail || password !== adminPassword) {
+            return res.json({
+                success: false,
+                message: "Invalid admin credentials",
+            });
+        }
+
+        const token = createToken("admin", "admin");
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: "admin",
+                name: "DAYate Admin",
+                email: adminEmail,
+                role: "admin",
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: "An error occurred" });
+    }
 
 }
 export {
   loginUser,
   registerUser,
+  registerBusiness,
+  businessLogin,
   adminLogin,
   getUserProfile,
   updateUserProfile,

@@ -38,9 +38,17 @@ import logo from "../assets/image2.png";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
   const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const role = localStorage.getItem("role") || "user";
+  const isBusinessWorkspace = location.pathname.startsWith("/business/dashboard");
+  const dashboardPath =
+    role === "admin"
+      ? "/admin/dashboard"
+      : role === "business"
+        ? "/business/dashboard"
+        : "/dashboard";
 
   const linkClass = ({ isActive }) =>
     `text-sm font-medium transition ${
@@ -51,15 +59,22 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("accountName");
+    localStorage.removeItem("businessName");
     navigate("/", { replace: true });
   };
+
+  if (isBusinessWorkspace) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-[#ff9847]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         
         {/* Logo */}
-        <NavLink to={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-3">
+        <NavLink to={isLoggedIn ? dashboardPath : "/"} className="flex items-center gap-3">
           <img
             src={logo}
             className="block h-16 w-auto object-contain"
@@ -83,13 +98,15 @@ const Navbar = () => {
 
           {isLoggedIn ? (
             <>
-              <NavLink to="/dashboard" className={linkClass}>
+              <NavLink to={dashboardPath} className={linkClass}>
                 Dashboard
               </NavLink>
 
-              <NavLink to="/profile" className={linkClass}>
-                Profile
-              </NavLink>
+              {role === "user" && (
+                <NavLink to="/profile" className={linkClass}>
+                  Profile
+                </NavLink>
+              )}
 
               <button
                 type="button"

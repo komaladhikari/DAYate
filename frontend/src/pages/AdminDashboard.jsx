@@ -1,0 +1,53 @@
+import { ShieldCheck, Store, Users } from "lucide-react";
+
+const AdminDashboard = () => {
+  const name = localStorage.getItem("accountName") || "DAYate Admin";
+
+  return (
+    <section className="min-h-[calc(100vh-90px)] bg-white px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col gap-4 border-b border-slate-200 pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-orange-500">
+              Admin
+            </p>
+            <h1 className="mt-2 text-4xl font-black text-slate-950">
+              Welcome, {name}
+            </h1>
+          </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-950 text-white">
+            <ShieldCheck size={28} />
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-6">
+            <Users className="text-orange-500" size={26} />
+            <h2 className="mt-4 text-lg font-black text-slate-950">Users</h2>
+            <p className="mt-2 text-sm font-medium text-slate-600">
+              Review customer activity and support account issues.
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-6">
+            <Store className="text-orange-500" size={26} />
+            <h2 className="mt-4 text-lg font-black text-slate-950">
+              Businesses
+            </h2>
+            <p className="mt-2 text-sm font-medium text-slate-600">
+              Manage restaurant and cafe partners as the platform grows.
+            </p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-6">
+            <ShieldCheck className="text-orange-500" size={26} />
+            <h2 className="mt-4 text-lg font-black text-slate-950">Access</h2>
+            <p className="mt-2 text-sm font-medium text-slate-600">
+              This page is limited to the single admin login.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default AdminDashboard;

@@ -28,9 +28,9 @@ export const updateUserById = (id, updateData) => {
     .select("-password");
 };
 
-export const createToken = (id) => {
+export const createToken = (id, role = "user") => {
   return jwt.sign(
-    { id },
+    { id, role },
     process.env.JWT_SECRET || process.env.JWT_SECRET_KEY
   );
 };
