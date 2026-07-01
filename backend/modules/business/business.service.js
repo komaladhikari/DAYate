@@ -18,9 +18,13 @@ const addDays = (date, days) => {
 const formatDay = (date) =>
   date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-const getMatchingRestaurantActivity = (plan, businessPattern) =>
+const getMatchingRestaurantActivity = (plan, business, businessPattern) =>
   plan.activities.find((activity) => {
     if (activity.type !== "restaurant") return false;
+
+    if (activity.businessId && String(activity.businessId) === String(business._id)) {
+      return true;
+    }
 
     return [activity.title, activity.location, activity.address].some((value) =>
       businessPattern.test(value || "")
@@ -46,6 +50,7 @@ const getBusinessDashboard = async (businessUserId) => {
   const candidatePlans = await DatePlan.find({
     "activities.type": "restaurant",
     $or: [
+      { "activities.businessId": business._id },
       { "activities.title": businessPattern },
       { "activities.location": businessPattern },
       { "activities.address": businessPattern },
@@ -57,7 +62,7 @@ const getBusinessDashboard = async (businessUserId) => {
   const selections = candidatePlans
     .map((plan) => ({
       plan,
-      activity: getMatchingRestaurantActivity(plan, businessPattern),
+      activity: getMatchingRestaurantActivity(plan, business, businessPattern),
     }))
     .filter(({ activity }) => Boolean(activity));
 

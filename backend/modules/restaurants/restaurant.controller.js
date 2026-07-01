@@ -1,8 +1,18 @@
 import {
   findNearbyRestaurants,
   getRestaurantPhoto,
+  listRegisteredRestaurants,
   searchRestaurantsByLocation,
 } from "./restaurant.service.js";
+
+const listRegisteredRestaurantPartners = async (req, res) => {
+  try {
+    const restaurants = await listRegisteredRestaurants();
+    res.json({ success: true, data: { restaurants } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 const listNearbyRestaurants = async (req, res) => {
   try {
@@ -94,4 +104,9 @@ const showRestaurantPhoto = async (req, res) => {
   }
 };
 
-export { listNearbyRestaurants, searchRestaurants, showRestaurantPhoto };
+export {
+  listNearbyRestaurants,
+  listRegisteredRestaurantPartners,
+  searchRestaurants,
+  showRestaurantPhoto,
+};

@@ -1,4 +1,5 @@
 import axios from "axios";
+import User from "../auth/user.model.js";
 
 const PLACES_NEARBY_URL =
   "https://places.googleapis.com/v1/places:searchNearby";
@@ -39,6 +40,67 @@ const normalizeRestaurant = (place) => ({
     })
   ),
 });
+
+const demoRestaurant = {
+  id: "demo-dayate-cozy-cafe",
+  name: "The Cozy Cafe",
+  address: "Austin, TX",
+  latitude: null,
+  longitude: null,
+  rating: 4.8,
+  reviewCount: 128,
+  priceLevel: "PRICE_LEVEL_MODERATE",
+  isOpen: null,
+  mapsUrl: "",
+  type: "cafe",
+  photoName: "",
+  photoAttributions: [],
+  source: "registered",
+  isRegistered: true,
+  isDemo: true,
+};
+
+const normalizeRegisteredBusiness = (business) => ({
+  id: `business-${business._id}`,
+  businessId: business._id,
+  name: business.businessName || business.name,
+  address: business.address || "",
+  latitude: null,
+  longitude: null,
+  rating: null,
+  reviewCount: 0,
+  priceLevel: null,
+  isOpen: null,
+  mapsUrl: "",
+  type: business.businessType || "restaurant",
+  photoName: "",
+  photoAttributions: [],
+  source: "registered",
+  isRegistered: true,
+  approvalStatus: business.approvalStatus || "pending",
+});
+
+export const listRegisteredRestaurants = async () => {
+  const businesses = await User.find({
+    role: "business",
+    businessType: { $in: ["restaurant", "cafe"] },
+    $or: [
+      { approvalStatus: "approved" },
+      { approvalStatus: { $exists: false } },
+    ],
+  })
+    .select("businessName businessType address approvalStatus")
+    .sort({ businessName: 1 });
+
+  const registeredRestaurants = businesses.map(normalizeRegisteredBusiness);
+  const hasDemoRestaurant = registeredRestaurants.some(
+    (restaurant) => restaurant.name.toLowerCase() === demoRestaurant.name.toLowerCase()
+  );
+
+  return hasDemoRestaurant
+    ? registeredRestaurants
+    : [demoRestaurant, ...registeredRestaurants];
+};
 
 const getPlacesHeaders = () => {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;

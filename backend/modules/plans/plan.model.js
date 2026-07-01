@@ -23,6 +23,7 @@ const datePlanSchema = new mongoose.Schema(
         from: String,
         to: String,
         providerPlaceId: String,
+        businessId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
         address: String,
         coordinates: {
           latitude: Number,
