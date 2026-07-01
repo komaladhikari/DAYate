@@ -12,6 +12,7 @@ import { restaurantRouter } from "./modules/restaurants/index.js";
 import { giftRouter } from "./modules/gifts/index.js";
 import { aiRouter } from "./modules/ai/index.js";
 import { businessRouter } from "./modules/business/index.js";
+import { adminRouter } from "./modules/admin/index.js";
 
 
 //app configuration
@@ -65,6 +66,7 @@ app.use("/api/restaurants", restaurantRouter);
 app.use("/api/gifts", giftRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/business", businessRouter);
+app.use("/api/admin", adminRouter);
 
 
 app.get('/',(req,res)=>{
