@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../assets/assets.js";
 import useNearbyRestaurants from "../hooks/useNearbyRestaurants";
@@ -22,16 +22,17 @@ const Cafes = () => {
   });
   const {
     restaurants,
+    registeredRestaurants,
     loading,
+    registeredLoading,
     error,
+    registeredError,
     locationLabel,
     refetch,
     searchByLocation,
   } = useNearbyRestaurants();
 
-  const filteredRestaurants = useMemo(
-    () =>
-      restaurants.filter((restaurant) => {
+  const filterRestaurant = useCallback((restaurant) => {
         const matchesType =
           filters.type === "all" || restaurant.type === filters.type;
         const matchesOpenNow = !filters.openNow || restaurant.isOpen === true;
@@ -42,8 +43,16 @@ const Cafes = () => {
           restaurant.priceLevel === filters.priceLevel;
 
         return matchesType && matchesOpenNow && matchesRating && matchesPrice;
-      }),
-    [filters, restaurants]
+  }, [filters]);
+
+  const filteredRegisteredRestaurants = useMemo(
+    () => registeredRestaurants.filter(filterRestaurant),
+    [filterRestaurant, registeredRestaurants]
+  );
+
+  const filteredRestaurants = useMemo(
+    () => restaurants.filter(filterRestaurant),
+    [filterRestaurant, restaurants]
   );
 
   const updateFilter = (field, value) => {
@@ -75,7 +84,7 @@ const Cafes = () => {
         <div>
           <h1 className="text-4xl font-black">Restaurants Near You</h1>
           <p className="mt-2 text-slate-600">
-            Showing suggestions around {locationLabel}.
+            Start with DAYate registered partners, then browse location suggestions around {locationLabel}.
           </p>
         </div>
 
@@ -171,10 +180,17 @@ const Cafes = () => {
 
         {!loading && !error && (
           <p className="mt-3 text-sm text-slate-500">
-            Showing {filteredRestaurants.length} of {restaurants.length} places
+            Showing {filteredRegisteredRestaurants.length} DAYate partners and{" "}
+            {filteredRestaurants.length} of {restaurants.length} location suggestions
           </p>
         )}
       </div>
+
+      {registeredError && (
+        <div className="mb-8 rounded-2xl border border-orange-200 bg-orange-50 p-5">
+          <p className="font-semibold text-orange-900">{registeredError}</p>
+        </div>
+      )}
 
       {error && (
         <div className="mb-8 rounded-2xl border border-rose-200 bg-rose-50 p-5">
@@ -199,6 +215,82 @@ const Cafes = () => {
             No places match these filters. Try resetting them.
           </p>
         )}
+
+      <div className="mb-8">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-black text-slate-950">
+              DAYate Registered Date Spots
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-slate-600">
+              These businesses can see customer date selections in their business dashboard.
+            </p>
+          </div>
+          {registeredLoading && (
+            <span className="rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-500">
+              Loading partners...
+            </span>
+          )}
+        </div>
+
+        {!registeredLoading && filteredRegisteredRestaurants.length === 0 && (
+          <p className="rounded-2xl bg-white p-6 text-slate-600 shadow">
+            No registered restaurants match these filters yet.
+          </p>
+        )}
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {filteredRegisteredRestaurants.map((restaurant, index) => {
+            const fallbackImage = index % 2 === 0 ? assets.image1 : assets.image2;
+            const image =
+              getRestaurantPhotoUrl(restaurant.photoName) || fallbackImage;
+
+            return (
+              <Link
+                key={restaurant.id}
+                to={`/cafes/${restaurant.id}`}
+                state={{ cafe: { ...restaurant, img: image, fallbackImage } }}
+                className="rounded-3xl border-2 border-emerald-100 bg-white p-4 text-center shadow-md transition hover:-translate-y-1 hover:border-emerald-200"
+              >
+                <div className="overflow-hidden rounded-2xl bg-emerald-50 p-3">
+                  <img
+                    src={image}
+                    alt=""
+                    onError={(event) => {
+                      event.currentTarget.src = fallbackImage;
+                    }}
+                    className="h-40 w-full rounded-lg object-cover"
+                  />
+                </div>
+                <div className="mt-4 flex justify-center">
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                    {restaurant.isDemo ? "Demo partner" : "DAYate partner"}
+                  </span>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold">{restaurant.name}</h3>
+                <p className="mt-2 text-sm text-slate-600">{restaurant.address || "Address coming soon"}</p>
+                <p className="mt-2 text-sm">
+                  {restaurant.rating
+                    ? `${restaurant.rating}/5 (${restaurant.reviewCount} selections/reviews)`
+                    : "New DAYate partner"}
+                </p>
+                <p className="mt-4 text-sm font-semibold text-emerald-600">
+                  Add to date plan
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <h2 className="text-2xl font-black text-slate-950">
+          Location API Suggestions
+        </h2>
+        <p className="mt-1 text-sm font-semibold text-slate-600">
+          These stay available for discovery, but registered DAYate partners are shown above.
+        </p>
+      </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {filteredRestaurants.map((restaurant, index) => {

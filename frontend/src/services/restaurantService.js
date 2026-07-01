@@ -44,6 +44,27 @@ const getNearbyRestaurants = async ({
   return data.data.restaurants;
 };
 
+const getRegisteredRestaurants = async ({ signal } = {}) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Please sign in to view DAYate restaurants.");
+  }
+
+  const response = await fetch(`${API}/api/restaurants/registered`, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Could not load registered restaurants.");
+  }
+
+  return data.data.restaurants;
+};
+
 const searchRestaurants = async ({ query, signal }) => {
   const token = localStorage.getItem("token");
 
@@ -66,4 +87,9 @@ const searchRestaurants = async ({ query, signal }) => {
   return data.data.restaurants;
 };
 
-export { getNearbyRestaurants, getRestaurantPhotoUrl, searchRestaurants };
+export {
+  getNearbyRestaurants,
+  getRegisteredRestaurants,
+  getRestaurantPhotoUrl,
+  searchRestaurants,
+};

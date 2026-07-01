@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getNearbyRestaurants,
+  getRegisteredRestaurants,
   searchRestaurants,
 } from "../services/restaurantService";
 
@@ -36,10 +37,43 @@ const getLocationErrorMessage = (error) => {
 
 const useNearbyRestaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
+  const [registeredRestaurants, setRegisteredRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [registeredLoading, setRegisteredLoading] = useState(true);
   const [error, setError] = useState("");
+  const [registeredError, setRegisteredError] = useState("");
   const [locationLabel, setLocationLabel] = useState("your current location");
   const controllerRef = useRef(null);
+  const registeredControllerRef = useRef(null);
+
+  const loadRegisteredRestaurants = useCallback(async () => {
+    registeredControllerRef.current?.abort();
+    const controller = new AbortController();
+    registeredControllerRef.current = controller;
+
+    setRegisteredLoading(true);
+    setRegisteredError("");
+
+    try {
+      const registered = await getRegisteredRestaurants({
+        signal: controller.signal,
+      });
+
+      if (!controller.signal.aborted) {
+        setRegisteredRestaurants(registered);
+      }
+    } catch (requestError) {
+      if (requestError.name !== "AbortError") {
+        setRegisteredError(
+          requestError.message || "Could not load DAYate restaurants."
+        );
+      }
+    } finally {
+      if (!controller.signal.aborted) {
+        setRegisteredLoading(false);
+      }
+    }
+  }, []);
 
   const loadRestaurants = useCallback(async () => {
     controllerRef.current?.abort();
@@ -103,19 +137,28 @@ const useNearbyRestaurants = () => {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(loadRestaurants, 0);
+    const registeredTimeoutId = window.setTimeout(loadRegisteredRestaurants, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
+      window.clearTimeout(registeredTimeoutId);
       controllerRef.current?.abort();
+      registeredControllerRef.current?.abort();
     };
-  }, [loadRestaurants]);
+  }, [loadRegisteredRestaurants, loadRestaurants]);
 
   return {
     restaurants,
+    registeredRestaurants,
     loading,
+    registeredLoading,
     error,
+    registeredError,
     locationLabel,
-    refetch: loadRestaurants,
+    refetch: () => {
+      loadRegisteredRestaurants();
+      loadRestaurants();
+    },
     searchByLocation,
   };
 };

@@ -92,6 +92,7 @@ const CafeReservation = () => {
               location: cafe.address || cafe.name,
               time: selectedDateTime.toISOString(),
               providerPlaceId: cafe.id,
+              businessId: cafe.businessId || null,
               address: cafe.address,
               coordinates: {
                 latitude: cafe.latitude,
@@ -170,6 +171,15 @@ const CafeReservation = () => {
 
         <h1 className="mt-6 text-3xl font-black">{cafe.name}</h1>
         <p className="mt-2 text-sm text-slate-600">{cafe.address}</p>
+        <p className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-black ${
+          cafe.isRegistered
+            ? "bg-emerald-50 text-emerald-700"
+            : "bg-orange-50 text-orange-600"
+        }`}>
+          {cafe.isRegistered
+            ? "DAYate registered partner"
+            : "Location API suggestion"}
+        </p>
         <p className="mt-2 text-sm">
           {cafe.rating
             ? `${cafe.rating}/5 (${cafe.reviewCount} reviews)`
