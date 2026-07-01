@@ -43,6 +43,7 @@ const Navbar = () => {
   const isLoggedIn = Boolean(localStorage.getItem("token"));
   const role = localStorage.getItem("role") || "user";
   const isBusinessWorkspace = location.pathname.startsWith("/business/dashboard");
+  const isAdminWorkspace = location.pathname.startsWith("/admin/dashboard");
   const dashboardPath =
     role === "admin"
       ? "/admin/dashboard"
@@ -65,7 +66,7 @@ const Navbar = () => {
     navigate("/", { replace: true });
   };
 
-  if (isBusinessWorkspace) {
+  if (isBusinessWorkspace || isAdminWorkspace) {
     return null;
   }
 
