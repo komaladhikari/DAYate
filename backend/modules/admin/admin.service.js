@@ -41,6 +41,15 @@ const countCreatedBetween = (model, query, start, end) =>
     createdAt: { $gte: start, $lt: end },
   });
 
+const customerUserQuery = {
+  $or: [
+    { role: "user" },
+    { role: { $exists: false } },
+    { role: null },
+    { role: "" },
+  ],
+};
+
 const getBusinessSelectionCount = async (businessName) => {
   const pattern = new RegExp(escapeRegExp(businessName), "i");
 
@@ -74,14 +83,14 @@ const getAdminDashboard = async (adminUserId) => {
     messagesLastWeek,
     photosThisWeek,
   ] = await Promise.all([
-    User.countDocuments({ role: "user" }),
+    User.countDocuments(customerUserQuery),
     User.countDocuments({ role: "business" }),
     DatePlan.countDocuments(),
     User.countDocuments({
       role: "business",
       $or: [{ approvalStatus: "pending" }, { approvalStatus: { $exists: false } }],
     }),
-    User.find({ role: "user" })
+    User.find(customerUserQuery)
       .select("name email createdAt")
       .sort({ createdAt: -1 })
       .limit(5),
@@ -111,8 +120,8 @@ const getAdminDashboard = async (adminUserId) => {
     plansThisWeek,
     plansLastWeek,
   ] = await Promise.all([
-    countCreatedBetween(User, { role: "user" }, weekStart, weekEnd),
-    countCreatedBetween(User, { role: "user" }, previousWeekStart, weekStart),
+    countCreatedBetween(User, customerUserQuery, weekStart, weekEnd),
+    countCreatedBetween(User, customerUserQuery, previousWeekStart, weekStart),
     countCreatedBetween(User, { role: "business" }, weekStart, weekEnd),
     countCreatedBetween(User, { role: "business" }, previousWeekStart, weekStart),
     countCreatedBetween(DatePlan, {}, weekStart, weekEnd),

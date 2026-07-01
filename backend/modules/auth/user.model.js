@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
     phone : {type: String},
     address: {type: String},
     timezone: {type: String},
-})
+}, { timestamps: true })
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
