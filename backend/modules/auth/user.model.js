@@ -8,6 +8,14 @@ const userSchema = new mongoose.Schema({
     role: {type: String, enum: ["user", "business"], default: "user"},
     businessName: {type: String},
     businessType: {type: String, enum: ["restaurant", "cafe"]},
+    approvalStatus: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: function () {
+            return this.role === "business" ? "pending" : undefined;
+        },
+    },
+    approvalReviewedAt: {type: Date},
     profilePicture : {type: String},
     bio : {type: String},
     phone : {type: String},
