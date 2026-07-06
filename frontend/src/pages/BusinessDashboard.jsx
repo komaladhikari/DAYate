@@ -272,9 +272,9 @@ const BusinessDashboard = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-black text-white shadow-lg shadow-slate-900/15 transition hover:bg-slate-800"
+              className="flex h-14 items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 text-lg font-black text-white shadow-xl shadow-slate-900/20 transition hover:-translate-y-0.5 hover:bg-slate-800"
             >
-              <LogOut size={18} />
+              <LogOut size={26} strokeWidth={2.4} />
               <span className="hidden sm:inline">Log out</span>
             </button>
           </div>
