@@ -31,7 +31,7 @@ import dessertImage from "../assets/image5.jpg";
 import { getBusinessDashboard } from "../services/businessDashboardService";
 
 const navItems = [
-  { label: "Overview", icon: Home, active: true },
+  { label: "Overview", icon: Home },
   { label: "Reservations", icon: CalendarDays },
   { label: "Activity & Stats", icon: BarChart3 },
   { label: "Customers", icon: Users },
@@ -109,6 +109,7 @@ const BusinessDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [activeView, setActiveView] = useState("Overview");
 
   const loadDashboard = useCallback(({ signal, showRefreshing = false } = {}) => {
     if (showRefreshing) {
@@ -178,7 +179,14 @@ const BusinessDashboard = () => {
   const name = dashboard?.business?.name || fallbackName;
   const business = dashboard?.business || {};
   const metricsData = dashboard?.metrics || {};
-  const reservations = dashboard?.upcomingReservations || [];
+  const overviewReservations = dashboard?.upcomingReservations || [];
+  const reservations = dashboard?.reservations || [];
+  const upcomingReservations = reservations.filter(
+    (reservation) => new Date(reservation.date) >= new Date()
+  );
+  const pastReservations = reservations.filter(
+    (reservation) => new Date(reservation.date) < new Date()
+  );
   const chart = useMemo(() => dashboard?.chart || [], [dashboard?.chart]);
   const dateRange = chart.length > 0
     ? `${chart[0].label} - ${chart[chart.length - 1].label}`
@@ -284,12 +292,13 @@ const BusinessDashboard = () => {
       <div className="grid lg:grid-cols-[280px_1fr]">
         <aside className="border-b border-orange-100 bg-white/72 px-4 py-4 shadow-[8px_0_30px_rgba(251,146,60,0.08)] lg:min-h-[calc(100vh-80px)] lg:border-b-0 lg:border-r lg:px-5 lg:py-9">
           <nav className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-3 lg:overflow-visible lg:pb-0">
-            {navItems.map(({ label, icon: Icon, active }) => (
+            {navItems.map(({ label, icon: Icon }) => (
               <button
                 key={label}
                 type="button"
+                onClick={() => setActiveView(label)}
                 className={`flex h-12 shrink-0 items-center gap-3 rounded-lg px-4 text-sm font-extrabold transition lg:w-full ${
-                  active
+                  activeView === label
                     ? "bg-orange-50 text-orange-500 shadow-sm"
                     : "text-slate-800 hover:bg-orange-50/70 hover:text-orange-500"
                 }`}
@@ -382,6 +391,8 @@ const BusinessDashboard = () => {
               </div>
             )}
 
+            {activeView === "Overview" && (
+              <>
             <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               {metrics.map(({ title, value, detail, icon: Icon, iconClass, detailClass }) => (
                 <article key={title} className="rounded-lg border border-orange-100 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
@@ -418,13 +429,13 @@ const BusinessDashboard = () => {
                     </div>
                   )}
 
-                  {!loading && reservations.length === 0 && (
+                  {!loading && overviewReservations.length === 0 && (
                     <div className="py-8 text-sm font-bold text-slate-500">
                       No customer plans have selected this business yet.
                     </div>
                   )}
 
-                  {!loading && reservations.map((reservation) => (
+                  {!loading && overviewReservations.map((reservation) => (
                     <div key={reservation.id} className="grid gap-3 py-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-xl font-black">
@@ -460,6 +471,7 @@ const BusinessDashboard = () => {
 
                 <button
                   type="button"
+                  onClick={() => setActiveView("Reservations")}
                   className="mt-4 flex h-16 w-full items-center justify-center gap-4 rounded-lg bg-orange-50 text-base font-black text-orange-500 transition hover:bg-orange-100"
                 >
                   View all reservations
@@ -522,6 +534,103 @@ const BusinessDashboard = () => {
                 </div>
               </section>
             </div>
+              </>
+            )}
+
+            {activeView === "Reservations" && (
+              <section className="mt-8 rounded-lg border border-orange-100 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] sm:p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-[0.12em] text-orange-500">
+                      Reservations
+                    </p>
+                    <h2 className="mt-2 text-3xl font-black text-slate-950">
+                      Reservations made for {name}
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
+                      These come from customer date plans that selected this cafe or restaurant.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-orange-100 bg-orange-50 text-center">
+                    <div className="p-4">
+                      <p className="text-2xl font-black">{reservations.length}</p>
+                      <p className="text-xs font-black text-slate-500">Total</p>
+                    </div>
+                    <div className="border-l border-orange-100 p-4">
+                      <p className="text-2xl font-black text-emerald-600">{upcomingReservations.length}</p>
+                      <p className="text-xs font-black text-slate-500">Upcoming</p>
+                    </div>
+                    <div className="border-l border-orange-100 p-4">
+                      <p className="text-2xl font-black text-slate-700">{pastReservations.length}</p>
+                      <p className="text-xs font-black text-slate-500">Past</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 overflow-hidden rounded-lg border border-orange-100">
+                  <div className="hidden grid-cols-[1.2fr_1fr_0.7fr_0.7fr_0.8fr] gap-4 bg-orange-50 px-5 py-3 text-xs font-black uppercase tracking-[0.08em] text-slate-500 lg:grid">
+                    <span>Customer</span>
+                    <span>Date & Time</span>
+                    <span>Party</span>
+                    <span>Status</span>
+                    <span>Created</span>
+                  </div>
+
+                  {loading && (
+                    <div className="p-6 text-sm font-bold text-slate-500">
+                      Loading reservations for {name}...
+                    </div>
+                  )}
+
+                  {!loading && reservations.length === 0 && (
+                    <div className="p-6 text-sm font-bold text-slate-500">
+                      No reservations have been made for this business yet.
+                    </div>
+                  )}
+
+                  {!loading && reservations.map((reservation) => (
+                    <div
+                      key={`${reservation.id}-${reservation.time}`}
+                      className="grid gap-4 border-t border-orange-100 px-5 py-4 first:border-t-0 lg:grid-cols-[1.2fr_1fr_0.7fr_0.7fr_0.8fr] lg:items-center"
+                    >
+                      <div className="flex min-w-0 items-center gap-4">
+                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-base font-black text-orange-600">
+                          {getInitials(reservation.names) || "D"}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate font-black text-slate-950">{reservation.names}</p>
+                          <p className="truncate text-sm font-semibold text-slate-500">
+                            {reservation.customerEmail || reservation.planName}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-sm font-semibold text-slate-600">
+                        <span className="font-black text-slate-950">{formatDate(reservation.date)}</span>
+                        <br />
+                        {formatTime(reservation.time)}
+                      </p>
+
+                      <p className="text-sm font-black text-slate-700">{reservation.people}</p>
+
+                      <span
+                        className={`inline-flex h-8 w-fit items-center justify-center rounded-full px-3 text-sm font-black ${
+                          reservation.status === "confirmed" || reservation.status === "planned"
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-orange-50 text-orange-500"
+                        }`}
+                      >
+                        {normalizeStatus(reservation.status)}
+                      </span>
+
+                      <p className="text-sm font-semibold text-slate-500">
+                        {formatDate(reservation.createdAt)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
               <section className="rounded-lg border border-orange-100 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] sm:p-6">

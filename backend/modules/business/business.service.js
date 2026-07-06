@@ -76,18 +76,23 @@ const getBusinessDashboard = async (businessUserId) => {
     return planDate >= previousWeekStart && planDate < weekStart;
   });
 
-  const upcomingReservations = selections
-    .filter(({ plan }) => new Date(plan.date) >= today)
-    .slice(0, 6)
+  const reservations = selections
     .map(({ plan, activity }) => ({
       id: plan._id,
+      customerId: plan.createdBy?._id || plan.createdBy || "",
+      customerEmail: plan.createdBy?.email || "",
       names: plan.createdBy?.name || "DAYate customer",
       date: plan.date,
       time: activity.time || plan.date,
       people: plan.partner ? "2 people" : "1 person",
       status: activity.bookingStatus || plan.status || "pending",
       planName: plan.name,
+      createdAt: plan.createdAt,
     }));
+
+  const upcomingReservations = reservations
+    .filter(({ date }) => new Date(date) >= today)
+    .slice(0, 6);
 
   const chart = Array.from({ length: 7 }, (_, index) => {
     const dayStart = addDays(weekStart, index);
@@ -145,7 +150,7 @@ const getBusinessDashboard = async (businessUserId) => {
       totalSelections: selections.length,
       selectionsThisWeek: selectionsThisWeek.length,
       selectionGrowth,
-      upcomingReservations: upcomingReservations.length,
+      upcomingReservations: reservations.filter(({ date }) => new Date(date) >= today).length,
       repeatCustomers: Array.from(repeatCustomers.values()).filter((count) => count > 1).length,
       estimatedRevenue: selectionsThisWeek.length * 35,
       averagePartySize:
@@ -162,6 +167,7 @@ const getBusinessDashboard = async (businessUserId) => {
           : 0,
     },
     chart,
+    reservations,
     upcomingReservations,
     popularItems,
     generatedAt: new Date().toISOString(),
