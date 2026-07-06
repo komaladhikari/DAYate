@@ -393,27 +393,7 @@ const BusinessDashboard = () => {
 
             {activeView === "Overview" && (
               <>
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {metrics.map(({ title, value, detail, icon: Icon, iconClass, detailClass }) => (
-                <article key={title} className="rounded-lg border border-orange-100 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-base font-black">{title}</h2>
-                        <Info size={17} className="text-slate-400" />
-                      </div>
-                      <p className="mt-4 text-4xl font-black tracking-normal">{value}</p>
-                      <p className={`mt-3 text-sm font-black ${detailClass}`}>{detail}</p>
-                    </div>
-                    <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
-                      <Icon size={30} />
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
+            <div className="mt-8">
               <section className="rounded-lg border border-orange-100 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] sm:p-6">
                 <div className="flex items-center justify-between gap-4">
                   <h2 className="text-2xl font-black">Upcoming Reservations</h2>
@@ -479,62 +459,97 @@ const BusinessDashboard = () => {
                 </button>
               </section>
 
-              <section className="rounded-lg border border-orange-100 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] sm:p-6">
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-2xl font-black">Date Selections This Week</h2>
-                  <button type="button" className="text-sm font-black text-orange-500 hover:text-orange-600">
-                    View report
-                  </button>
-                </div>
-
-                <div className="mt-7 overflow-hidden rounded-lg">
-                  <svg viewBox="0 0 760 240" className="h-64 w-full" role="img" aria-label="Weekly date selections line chart">
-                    <defs>
-                      <linearGradient id="businessChartFill" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#fb923c" stopOpacity="0.24" />
-                        <stop offset="100%" stopColor="#fb923c" stopOpacity="0.03" />
-                      </linearGradient>
-                    </defs>
-                    {[0, 48, 96, 144, 192].map((y) => (
-                      <line key={y} x1="0" x2="740" y1={y} y2={y} stroke="#e7e5e4" strokeWidth="1" />
-                    ))}
-                    {[0, 120, 240, 360, 480, 600, 720].map((x) => (
-                      <line key={x} x1={x} x2={x} y1="0" y2="192" stroke="#f3eee9" strokeWidth="1" />
-                    ))}
-                    <path d={chartPaths.areaPath} fill="url(#businessChartFill)" />
-                    <path d={chartPaths.linePath} fill="none" stroke="#ff6b1a" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
-                    {chartPaths.points.map(([x, y]) => (
-                      <circle key={`${x}-${y}`} cx={x} cy={y} r="8" fill="#ff6b1a" stroke="#fff7ed" strokeWidth="4" />
-                    ))}
-                    {(chart.length > 0 ? chart : Array.from({ length: 7 }, (_, index) => ({ label: `Day ${index + 1}` }))).map((point, index, labels) => (
-                      <text key={point.label} x={index * (720 / Math.max(labels.length - 1, 1))} y="222" fill="#64748b" fontSize="14" fontWeight="700" textAnchor={index === 0 ? "start" : "middle"}>
-                        {point.label}
-                      </text>
-                    ))}
-                    {chart.map((point, index, labels) => (
-                      <text key={`${point.label}-count`} x={index * (720 / Math.max(labels.length - 1, 1))} y="24" fill="#94a3b8" fontSize="12" fontWeight="700" textAnchor={index === 0 ? "start" : "middle"}>
-                        {point.count}
-                      </text>
-                    ))}
-                  </svg>
-                </div>
-
-                <div className="grid overflow-hidden rounded-lg bg-orange-50 sm:grid-cols-4">
-                  {[
-                    [String(metricsData.totalSelections || 0), "Total Selections"],
-                    [`${Number(metricsData.selectionGrowth || 0) > 0 ? "+" : ""}${metricsData.selectionGrowth || 0}%`, "vs last week"],
-                    [String(metricsData.selectionsThisWeek || 0), "This Week"],
-                    [String(metricsData.averagePartySize || 0), "Avg. party size"],
-                  ].map(([value, label]) => (
-                    <div key={label} className="border-orange-100 p-4 sm:border-l first:sm:border-l-0">
-                      <p className={`text-3xl font-black ${value.startsWith("+") ? "text-emerald-600" : "text-slate-950"}`}>{value}</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-500">{label}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
             </div>
               </>
+            )}
+
+            {activeView === "Activity & Stats" && (
+              <section className="mt-8 space-y-6">
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.12em] text-orange-500">
+                    Activity & Stats
+                  </p>
+                  <h2 className="mt-2 text-3xl font-black text-slate-950">
+                    Performance for {name}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
+                    Live activity from customer date plans that selected this business.
+                  </p>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                  {metrics.map(({ title, value, detail, icon: Icon, iconClass, detailClass }) => (
+                    <article key={title} className="rounded-lg border border-orange-100 bg-white p-6 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-black">{title}</h3>
+                            <Info size={17} className="text-slate-400" />
+                          </div>
+                          <p className="mt-4 text-4xl font-black tracking-normal">{value}</p>
+                          <p className={`mt-3 text-sm font-black ${detailClass}`}>{detail}</p>
+                        </div>
+                        <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${iconClass}`}>
+                          <Icon size={30} />
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <section className="rounded-lg border border-orange-100 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] sm:p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className="text-2xl font-black">Date Selections This Week</h3>
+                    <span className="text-sm font-black text-orange-500">{dateRange}</span>
+                  </div>
+
+                  <div className="mt-7 overflow-hidden rounded-lg">
+                    <svg viewBox="0 0 760 240" className="h-64 w-full" role="img" aria-label="Weekly date selections line chart">
+                      <defs>
+                        <linearGradient id="businessChartFill" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stopColor="#fb923c" stopOpacity="0.24" />
+                          <stop offset="100%" stopColor="#fb923c" stopOpacity="0.03" />
+                        </linearGradient>
+                      </defs>
+                      {[0, 48, 96, 144, 192].map((y) => (
+                        <line key={y} x1="0" x2="740" y1={y} y2={y} stroke="#e7e5e4" strokeWidth="1" />
+                      ))}
+                      {[0, 120, 240, 360, 480, 600, 720].map((x) => (
+                        <line key={x} x1={x} x2={x} y1="0" y2="192" stroke="#f3eee9" strokeWidth="1" />
+                      ))}
+                      <path d={chartPaths.areaPath} fill="url(#businessChartFill)" />
+                      <path d={chartPaths.linePath} fill="none" stroke="#ff6b1a" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
+                      {chartPaths.points.map(([x, y]) => (
+                        <circle key={`${x}-${y}`} cx={x} cy={y} r="8" fill="#ff6b1a" stroke="#fff7ed" strokeWidth="4" />
+                      ))}
+                      {(chart.length > 0 ? chart : Array.from({ length: 7 }, (_, index) => ({ label: `Day ${index + 1}` }))).map((point, index, labels) => (
+                        <text key={point.label} x={index * (720 / Math.max(labels.length - 1, 1))} y="222" fill="#64748b" fontSize="14" fontWeight="700" textAnchor={index === 0 ? "start" : "middle"}>
+                          {point.label}
+                        </text>
+                      ))}
+                      {chart.map((point, index, labels) => (
+                        <text key={`${point.label}-count`} x={index * (720 / Math.max(labels.length - 1, 1))} y="24" fill="#94a3b8" fontSize="12" fontWeight="700" textAnchor={index === 0 ? "start" : "middle"}>
+                          {point.count}
+                        </text>
+                      ))}
+                    </svg>
+                  </div>
+
+                  <div className="grid overflow-hidden rounded-lg bg-orange-50 sm:grid-cols-4">
+                    {[
+                      [String(metricsData.totalSelections || 0), "Total Selections"],
+                      [`${Number(metricsData.selectionGrowth || 0) > 0 ? "+" : ""}${metricsData.selectionGrowth || 0}%`, "vs last week"],
+                      [String(metricsData.selectionsThisWeek || 0), "This Week"],
+                      [String(metricsData.averagePartySize || 0), "Avg. party size"],
+                    ].map(([value, label]) => (
+                      <div key={label} className="border-orange-100 p-4 sm:border-l first:sm:border-l-0">
+                        <p className={`text-3xl font-black ${value.startsWith("+") ? "text-emerald-600" : "text-slate-950"}`}>{value}</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-500">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </section>
             )}
 
             {activeView === "Reservations" && (
@@ -632,6 +647,7 @@ const BusinessDashboard = () => {
               </section>
             )}
 
+            {activeView === "Overview" && (
             <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
               <section className="rounded-lg border border-orange-100 bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,0.06)] sm:p-6">
                 <div className="flex items-center justify-between gap-4">
@@ -689,6 +705,7 @@ const BusinessDashboard = () => {
                 </div>
               </section>
             </div>
+            )}
           </div>
         </main>
       </div>
