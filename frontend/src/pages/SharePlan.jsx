@@ -1,8 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com";
 
+const isSharedPlan = (plan) =>
+  Boolean(plan.partner || plan.sharedWithEmail || plan.sharedAt);
+
 const PlannedDates = () => {
+  const location = useLocation();
+  const finalizedPlanIds = useMemo(
+    () => location.state?.finalizedPlanIds || [],
+    [location.state?.finalizedPlanIds]
+  );
+  const justFinalized = Boolean(location.state?.justFinalized);
   const [plans, setPlans] = useState([]);
   const [emails, setEmails] = useState({});
   const [loading, setLoading] = useState(true);
@@ -112,6 +122,9 @@ const PlannedDates = () => {
       if (data.success) {
         alert("Plan shared successfully 💛");
         setEmails({ ...emails, [planId]: "" });
+        setPlans((current) =>
+          current.map((plan) => (plan._id === planId ? data.data : plan))
+        );
       } else {
         alert(data.message);
       }
@@ -171,7 +184,15 @@ const PlannedDates = () => {
         const data = await res.json();
 
         if (data.success) {
-          setPlans(data.data);
+          const orderedPlans = [...data.data].sort((firstPlan, secondPlan) => {
+            const firstIsFinalized = finalizedPlanIds.includes(firstPlan._id);
+            const secondIsFinalized = finalizedPlanIds.includes(secondPlan._id);
+
+            if (firstIsFinalized === secondIsFinalized) return 0;
+            return firstIsFinalized ? -1 : 1;
+          });
+
+          setPlans(orderedPlans);
         }
       } catch (error) {
         console.log(error);
@@ -181,7 +202,7 @@ const PlannedDates = () => {
     };
 
     fetchPlans();
-  }, [token]);
+  }, [finalizedPlanIds, token]);
 
   if (loading) {
     return <p className="p-8">Loading your plans...</p>;
@@ -198,6 +219,12 @@ const PlannedDates = () => {
           Share the plan with someone you care about.
         </p>
 
+        {justFinalized && (
+          <div className="mb-6 rounded-2xl border border-[#ff9847]/30 bg-white px-5 py-4 text-sm font-semibold text-[#4b2f22] shadow-sm">
+            Your date plan is finalized. Add your loved one's email below to send it to them.
+          </div>
+        )}
+
         {plans.length === 0 ? (
           <p className="text-[#7a5a48]">You have not planned any dates yet.</p>
         ) : (
@@ -205,7 +232,11 @@ const PlannedDates = () => {
             {plans.map((plan) => (
               <div
                 key={plan._id}
-                className="rounded-3xl border border-[#f3d6bd] bg-white p-6 shadow-sm"
+                className={`rounded-3xl border bg-white p-6 shadow-sm ${
+                  finalizedPlanIds.includes(plan._id)
+                    ? "border-[#ff9847] ring-4 ring-[#ff9847]/15"
+                    : "border-[#f3d6bd]"
+                }`}
               >
                 {editingPlanId === plan._id && editForm ? (
                   <div className="mb-6 space-y-4 rounded-2xl bg-[#fff7ef] p-5">
@@ -339,13 +370,29 @@ const PlannedDates = () => {
 
                 <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                   <div>
-                    <h2 className="text-2xl font-semibold text-[#3b2418]">
-                      {plan.name}
-                    </h2>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h2 className="text-2xl font-semibold text-[#3b2418]">
+                        {plan.name}
+                      </h2>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] ${
+                          isSharedPlan(plan)
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-orange-50 text-orange-600"
+                        }`}
+                      >
+                        {isSharedPlan(plan) ? "Shared" : "Draft"}
+                      </span>
+                    </div>
 
                     <p className="mt-1 text-sm text-[#8a6a57]">
                       {new Date(plan.date).toDateString()}
                     </p>
+                    {!isSharedPlan(plan) && (
+                      <p className="mt-2 text-sm font-semibold text-[#8a6a57]">
+                        Add your loved one's email to send this finalized date.
+                      </p>
+                    )}
                   </div>
                 </div>
 

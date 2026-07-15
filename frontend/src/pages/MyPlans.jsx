@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "https://dayate-zw7n.onrender.com";
 
 const MyPlans = () => {
+  const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [selectedPlans, setSelectedPlans] = useState([]);
 
@@ -66,10 +68,17 @@ const MyPlans = () => {
       alert(data.message);
 
       if (data.success) {
+        const finalizedPlanIds = [...selectedPlans];
         setPlans((prev) =>
-          prev.filter((plan) => !selectedPlans.includes(plan._id))
+          prev.filter((plan) => !finalizedPlanIds.includes(plan._id))
         );
         setSelectedPlans([]);
+        navigate("/share", {
+          state: {
+            finalizedPlanIds,
+            justFinalized: true,
+          },
+        });
       }
     } catch (error) {
       console.error(error);
