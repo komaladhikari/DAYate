@@ -14,6 +14,8 @@ const initialDashboard = {
 };
 
 const getId = (value) => String(value?._id || value || "");
+const isSharedPlan = (plan) =>
+  Boolean(plan.partner || plan.sharedWithEmail || plan.sharedAt);
 
 const buildDashboard = ({ user, plans }) => {
   const today = new Date();
@@ -23,6 +25,8 @@ const buildDashboard = ({ user, plans }) => {
   const upcomingPlans = plans
     .filter(
       (plan) =>
+        plan.finalized &&
+        isSharedPlan(plan) &&
         new Date(plan.date) >= today &&
         plan.status !== "cancelled"
     )
@@ -36,7 +40,7 @@ const buildDashboard = ({ user, plans }) => {
       created: plans.filter((plan) => getId(plan.createdBy) === userId).length,
       upcoming: upcomingPlans.length,
       completed: plans.filter((plan) => plan.status === "completed").length,
-      shared: plans.filter((plan) => Boolean(plan.partner)).length,
+      shared: plans.filter(isSharedPlan).length,
     },
   };
 };

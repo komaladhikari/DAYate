@@ -62,16 +62,16 @@ const UpcomingPlans = ({ plans, user, loading, unavailable, onRetry }) => {
               aria-hidden="true"
             />
             <p className="mt-4 font-bold text-slate-800">
-              No upcoming plans yet
+              No shared upcoming plans yet
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Create a plan and it will appear here.
+              Finalized plans appear here after you send them to your loved one.
             </p>
             <Link
-              to="/activities"
+              to="/share"
               className="mt-5 inline-flex rounded-full bg-slate-950 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-slate-800"
             >
-              Create a Plan
+              Share My Plans
             </Link>
           </div>
         </div>
