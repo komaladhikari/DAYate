@@ -4,6 +4,7 @@ import authUser from "../../shared/middleware/authUser.js";
 import {
   loginUser,
   registerUser,
+  verifyRegistration,
   registerBusiness,
   businessLogin,
   adminLogin,
@@ -20,6 +21,7 @@ userRouter.put("/profile", authUser, updateUserProfile);
 userRouter.put("/profile/password", authUser, updateUserPassword);
 
 userRouter.post('/register', registerUser);
+userRouter.post('/register/verify', verifyRegistration);
 userRouter.post('/login', loginUser);
 userRouter.post('/admin', adminLogin);
 userRouter.post('/business/register', registerBusiness);

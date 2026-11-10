@@ -3,15 +3,41 @@
 
 import validator from 'validator';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import sendEmail from "../../shared/utils/sendEmail.js";
 
 import {
   findUserByEmail,
+  findUserByEmailCaseInsensitive,
   findUserById,
   findUserWithPasswordById,
   createUser,
   updateUserById,
   createToken,
+  replacePendingRegistration,
+  findPendingRegistration,
+  incrementPendingAttempts,
+  consumePendingRegistration,
+  deletePendingRegistration,
 } from "./auth.service.js";
+
+const VERIFICATION_CODE_LENGTH = 6;
+const VERIFICATION_TTL_MS = 5 * 60 * 1000;
+const MAX_VERIFICATION_ATTEMPTS = 5;
+const VERIFICATION_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+const generateVerificationCode = () => {
+  let code;
+
+  do {
+    code = Array.from(
+      { length: VERIFICATION_CODE_LENGTH },
+      () => VERIFICATION_ALPHABET[crypto.randomInt(VERIFICATION_ALPHABET.length)]
+    ).join("");
+  } while (!/[a-z]/.test(code) || !/[0-9]/.test(code));
+
+  return code;
+};
 
 const loginUser = async(req,res)=>{
      try{
@@ -58,47 +84,159 @@ const registerUser = async (req,res)=>{
         try{
             //if anyone will hit the api endpoint with name email and password then we will get those values in the req.body
             const {name,email,password} = req.body;
+            const normalizedEmail = email?.trim().toLowerCase();
+
+            if (!name?.trim() || !normalizedEmail || !password) {
+                return res.json({success: false, message: "Name, email, and password are required"});
+            }
             //checking user already exists or not 
-            const exits = await findUserByEmail(email);
+            const exits = await findUserByEmailCaseInsensitive(normalizedEmail);
             if (exits){
                 return res.json ({success: false, message: "User already exists"})
             }
         
             //validating the password and email and name
-            if (!validator.isEmail(email)) {
+            if (!validator.isEmail(normalizedEmail)) {
                 return res.json ({success: false, message: "Please enter a valid email"})}
             if (password.length < 8) {
                 return res.json ({success: false, message: "Please enter strong password"})}
 
-            //hashing user password
+            // Store registration details temporarily until the email is verified.
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
+            const verificationCode = generateVerificationCode();
+            const codeHash = await bcrypt.hash(verificationCode, salt);
+            const expiresAt = new Date(Date.now() + VERIFICATION_TTL_MS);
 
-            const user = await createUser({
-                name,
-                email,
+            const pendingRegistration = await replacePendingRegistration(normalizedEmail, {
+                name: name.trim(),
+                email: normalizedEmail,
                 password: hashedPassword,
-                role: "user",
+                codeHash,
+                attempts: 0,
+                expiresAt,
             });
 
-            const token = createToken(user._id, user.role);
+            try {
+                await sendEmail({
+                    to: normalizedEmail,
+                    subject: "Verify your DAYate email",
+                    html: `
+                      <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6;">
+                        <h2 style="color: #f97316;">Verify your DAYate account</h2>
+                        <p>Your verification code is:</p>
+                        <p style="font-size: 30px; font-weight: 800; letter-spacing: 8px; color: #ea580c;">${verificationCode}</p>
+                        <p>This code expires in 5 minutes. If you request another code, this one will stop working.</p>
+                      </div>
+                    `,
+                });
+            } catch (emailError) {
+                await deletePendingRegistration(pendingRegistration._id, codeHash);
+                console.error("Could not send registration verification email:", emailError.message);
+                return res.json({success: false, message: "Could not send verification email. Please try again."});
+            }
 
             res.json({
                 success: true,
-                token,
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                },
+                requiresVerification: true,
+                email: normalizedEmail,
+                expiresInSeconds: VERIFICATION_TTL_MS / 1000,
+                message: "Verification code sent",
             })
     }
         catch(error){
             console.log (error);
-            res.json({sucess:false, message: error.message})
+            res.json({success:false, message: error.message})
         }
 }
+
+const verifyRegistration = async (req, res) => {
+    try {
+        const normalizedEmail = req.body.email?.trim().toLowerCase();
+        const code = req.body.code?.trim().toLowerCase();
+
+        if (!normalizedEmail || !code) {
+            return res.json({success: false, message: "Email and verification code are required"});
+        }
+
+        if (!/^[a-z0-9]{6}$/.test(code)) {
+            return res.json({success: false, message: "Enter the 6-character verification code"});
+        }
+
+        const pending = await findPendingRegistration(normalizedEmail);
+
+        if (!pending) {
+            return res.json({success: false, code: "CODE_INVALID", message: "This code is invalid or expired. Request a new code."});
+        }
+
+        if (pending.expiresAt <= new Date()) {
+            await deletePendingRegistration(pending._id);
+            return res.json({success: false, code: "CODE_EXPIRED", message: "This code has expired. Request a new code."});
+        }
+
+        if (pending.attempts >= MAX_VERIFICATION_ATTEMPTS) {
+            await deletePendingRegistration(pending._id);
+            return res.json({success: false, code: "TOO_MANY_ATTEMPTS", message: "Too many incorrect attempts. Request a new code."});
+        }
+
+        // Reserve an attempt atomically before checking the code. This prevents
+        // parallel requests from getting more than five guesses for one code.
+        const attemptedPending = await incrementPendingAttempts(pending._id);
+        if (!attemptedPending) {
+            await deletePendingRegistration(pending._id);
+            return res.json({success: false, code: "TOO_MANY_ATTEMPTS", attemptsRemaining: 0, message: "Too many incorrect attempts. Request a new code."});
+        }
+
+        const isMatch = await bcrypt.compare(code, attemptedPending.codeHash);
+
+        if (!isMatch) {
+            const attempts = attemptedPending.attempts;
+            const attemptsRemaining = Math.max(0, MAX_VERIFICATION_ATTEMPTS - attempts);
+
+            if (attemptsRemaining === 0) {
+                await deletePendingRegistration(pending._id);
+                return res.json({success: false, code: "TOO_MANY_ATTEMPTS", attemptsRemaining: 0, message: "Too many incorrect attempts. Request a new code."});
+            }
+
+            return res.json({success: false, code: "CODE_INCORRECT", attemptsRemaining, message: `Incorrect code. ${attemptsRemaining} attempt${attemptsRemaining === 1 ? "" : "s"} remaining.`});
+        }
+
+        const consumed = await consumePendingRegistration(attemptedPending._id, attemptedPending.codeHash);
+        if (!consumed) {
+            return res.json({success: false, code: "CODE_INVALID", message: "This code is no longer valid. Request a new code."});
+        }
+
+        const existingUser = await findUserByEmailCaseInsensitive(normalizedEmail);
+        if (existingUser) {
+            return res.json({success: false, message: "User already exists"});
+        }
+
+        const user = await createUser({
+            name: consumed.name,
+            email: consumed.email,
+            password: consumed.password,
+            role: "user",
+        });
+        const token = createToken(user._id, user.role);
+
+        return res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            },
+        });
+    } catch (error) {
+        if (error?.code === 11000) {
+            return res.json({success: false, message: "User already exists"});
+        }
+        console.log(error);
+        return res.json({success: false, message: "An error occurred"});
+    }
+};
 const getUserProfile = async (req, res) => {
   try {
     const user = await findUserById(req.userId);
@@ -337,6 +475,7 @@ const adminLogin = async (req,res)=>{
 export {
   loginUser,
   registerUser,
+  verifyRegistration,
   registerBusiness,
   businessLogin,
   adminLogin,

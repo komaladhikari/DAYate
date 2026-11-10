@@ -1,0 +1,13 @@
+{
+  "name": "dayate",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --kill-others --names backend,frontend --prefix-colors blue,magenta \"npm --prefix backend run server\" \"npm --prefix frontend run dev\"",
+    "dev:backend": "npm --prefix backend run server",
+    "dev:frontend": "npm --prefix frontend run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
